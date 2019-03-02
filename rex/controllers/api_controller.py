@@ -96,7 +96,7 @@ def login():
     password = dataDict['password'].lower()
       
     user = db.User.find_one({'email': email})
-
+    
     if user is None or check_password(user['password'], password) == False:
         return json.dumps({
           'status': 'error', 
