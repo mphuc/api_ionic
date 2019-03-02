@@ -96,7 +96,7 @@ def login():
     password = dataDict['password'].lower()
       
     user = db.User.find_one({'email': email})
-
+    
     if user is None or check_password(user['password'], password) == False:
         return json.dumps({
           'status': 'error', 
@@ -248,7 +248,7 @@ def active_code():
 def get_version_app():
     return json.dumps({
         'status': 'complete', 
-        'version': '2' 
+        'version': '1' 
     })
 
 
