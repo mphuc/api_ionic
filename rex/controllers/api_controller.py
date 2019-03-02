@@ -277,7 +277,7 @@ def create_account(email,password,p_node):
         's_wallet' : 0,
         'max_out' : 0,
         'total_earn' : 0,
-        'img_profile' :'/assets/imgs/logo.png',
+        'img_profile' :'assets/imgs/logo.png',
         'total_invest': 0,
         'btc_address' : '',
         'eth_address' : '',
