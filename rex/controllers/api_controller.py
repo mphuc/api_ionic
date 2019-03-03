@@ -278,6 +278,7 @@ def upload_img_profile(customer_id):
 @api_ctrl.route('/upload-img-passport-fontside/<customer_id>', methods=['GET', 'POST'])
 def upload_img_passport_fontside(customer_id):
     
+    print customer_id
     SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
     
     upload     = request.files.get('file')
