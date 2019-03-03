@@ -267,10 +267,13 @@ def upload_img_profile(customer_id):
     name = id_generator(25)+upload.filename
     file_path = "{path}/{file}".format(path=save_path, file=name)
     upload.save(file_path)
-    print file_path
+    
+    url_img_save = 'https://api.buy-sellpro.co/api/static/img/upload/'+name
+    print url_img_save
+    db.users.update({ "customer_id" : customer_id }, { '$set': { "img_profile": url_img_save } })
     return json.dumps({
         'status': 'complete', 
-        'name_ifle' : 'https://api.buy-sellpro.co/api/static/img/upload/'+name
+        'name_ifle' : url_img_save
     })
     
 
