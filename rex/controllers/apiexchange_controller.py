@@ -332,6 +332,22 @@ def get_support_id():
         "date_added" : (item['date_added']).strftime('%H:%M %d-%m-%Y')
       })
 
+@apiexchange_ctrl.route('/get-notification-id', methods=['GET', 'POST'])
+def get_notification_id():
+
+    dataDict = json.loads(request.data)
+    _ids = dataDict['_id']
+    
+    item = db.notifications.find_one({'_id' :  ObjectId(_ids)})
+    db.notifications.update({ "_id" : ObjectId(_ids) }, { '$set': { 'read': 1} })
+
+    return json.dumps({
+      "_id" : str(item['_id']),
+      "username" : item['username'],
+      "content" : item['content'],
+      "date_added" : (item['date_added']).strftime('%H:%M %d-%m-%Y')
+    })
+
 
 @apiexchange_ctrl.route('/load-price', methods=['GET', 'POST'])
 def load_price():
