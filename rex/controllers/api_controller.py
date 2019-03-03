@@ -146,6 +146,36 @@ def change_password():
             'message': 'Change password successfully' 
           })  
 
+@api_ctrl.route('/update-infomation', methods=['GET', 'POST'])
+def update_infomation():
+   
+    dataDict = json.loads(request.data)
+    first_name = dataDict['first_name']
+    last_name = dataDict['last_name']
+    birth_day = dataDict['birth_day']
+    address = dataDict['address']
+    telephone = dataDict['telephone']
+    customer_id = dataDict['customer_id'].lower()
+
+    user = db.User.find_one({'customer_id': customer_id})
+
+    if user is None:
+        return json.dumps({
+          'status': 'error', 
+          'message': 'Error' 
+      })
+    else:
+        user['personal_info']['firstname'] = first_name
+        user['personal_info']['lastname'] = last_name
+        user['personal_info']['date_birthday'] = birth_day
+        user['personal_info']['address'] = address
+        user['telephone'] = telephone
+        db.users.save(user)
+        return json.dumps({
+          'status': 'complete', 
+          'message': 'Update account information successfully' 
+        })  
+
 @api_ctrl.route('/update-img-profile', methods=['GET', 'POST'])
 def update_img_profile():
    
