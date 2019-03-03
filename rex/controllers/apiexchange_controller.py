@@ -235,6 +235,30 @@ def get_history_transaction():
       })
     return json.dumps(array)
 
+@apiexchange_ctrl.route('/get-history-profit', methods=['GET', 'POST'])
+def get_history_profit():
+
+    dataDict = json.loads(request.data)
+    customer_id = dataDict['customer_id']
+    types = dataDict['types']
+    start = dataDict['start']
+    limit = dataDict['limit']
+    
+    history = db.historys.find({'$and' : [{'uid': customer_id},{'type': types}]}).sort([("date_added", -1)]).limit(limit).skip(start)
+    #.sort("date_added", -1)
+
+    array = []
+    for item in history:
+      array.append({
+        "username" : item['username'],
+        "amount" : item['amount'],
+        "amount" : item['amount'],
+        "type" : item['type'],
+        "date_added" : (item['date_added']).strftime('%H:%M %d-%m-%Y')
+      })
+    return json.dumps(array)
+
+
 @apiexchange_ctrl.route('/get-history-support', methods=['GET', 'POST'])
 def get_history_support():
 
