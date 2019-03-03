@@ -270,7 +270,7 @@ def upload_img_profile(customer_id):
     print file_path
     return json.dumps({
         'status': 'complete', 
-        'file_path' : file_path
+        'name_ifle' : 'https://api.buy-sellpro.co/api/static/img/upload/'+name
     })
     
 
