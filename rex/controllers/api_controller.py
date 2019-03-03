@@ -352,7 +352,20 @@ def create_account(email,password,p_node):
         'status_2fa': 0,
         'status_withdraw' : 0,
         'investment' : 0,
-        'active_email' : 0
+        'active_email' : 0,
+        'verification' : 0,
+        'personal_info' : { 
+        'firstname' : '',
+        'lastname' : '',
+        'date_birthday' :'',
+        'address' :'',
+        'postalcode' : '',
+        'city' : '',
+        'country' : '',
+        'img_passport_fontside' : '',
+        'img_passport_backside' : '',
+        'img_address' : ''
+      } 
     }
     customer = db.users.insert(datas)
     return True

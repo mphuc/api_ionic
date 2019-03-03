@@ -49,6 +49,7 @@ class User(Document):
         'country' : unicode,
         'total_invest' : float,
         'status':int,
+        'verification' : int,
         'type': int,
         'active_email': int,
         'secret_2fa': unicode,
