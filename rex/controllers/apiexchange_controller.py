@@ -335,7 +335,16 @@ def get_infomation_user():
           'email': user['email'],
           'date_added' : (user['creation']).strftime('%H:%M %d-%m-%Y'),
           'investment': user['investment'],
-          'img_profile' : user['img_profile']
+          'img_profile' : user['img_profile'],
+          'img_address' : user['personal_info']['img_address'],
+          'img_passport_fontside' : user['personal_info']['img_passport_fontside'],
+          'img_passport_backside' : user['personal_info']['img_passport_backside'],
+          'telephone' : user['telephone'],
+          'firstname' : user['personal_info']['firstname'],
+          'lastname' : user['personal_info']['lastname'],
+          'date_birthday' : user['personal_info']['date_birthday'],
+          'verification' : user['verification']
+
       })
     else:
       return json.dumps({
