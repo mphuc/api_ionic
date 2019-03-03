@@ -252,6 +252,28 @@ def get_version_app():
     })
 
 
+@api_ctrl.route('/img', methods=['GET', 'POST'])
+def identity():
+    
+    SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
+    
+    upload     = request.files.get('file')
+    print upload
+    save_path = SITE_ROOT+'/../static/img/upload'.format(category='category')
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+
+
+    name = id_generator(25)+upload.filename
+    file_path = "{path}/{file}".format(path=save_path, file=name)
+    upload.save(file_path)
+    print file_path
+    return json.dumps({
+        'status': 'complete', 
+    })
+    
+
+
 def create_account(email,password,p_node):
     localtime = time.localtime(time.time())
     customer_id = '%s%s%s%s%s%s'%(localtime.tm_mon,localtime.tm_year,localtime.tm_mday,localtime.tm_hour,localtime.tm_min,localtime.tm_sec)
