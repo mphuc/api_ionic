@@ -344,8 +344,13 @@ def get_infomation_user():
           'address' : user['personal_info']['address'],
           'lastname' : user['personal_info']['lastname'],
           'date_birthday' : user['personal_info']['date_birthday'],
-          'verification' : user['verification']
-
+          'verification' : user['verification'],
+          'd_wallet' : user['d_wallet'],
+          'r_wallet' : user['r_wallet'],
+          's_wallet' : user['s_wallet'],
+          'l_wallet' : user['l_wallet'],
+          'ss_wallet' : user['ss_wallet'],
+          'sf_wallet' : user['sf_wallet']
       })
     else:
       return json.dumps({

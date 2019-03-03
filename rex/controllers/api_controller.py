@@ -403,9 +403,12 @@ def create_account(email,password,p_node):
         'creation': datetime.utcnow(),
         'total_pd_left' : 0,
         'total_pd_right' : 0,
-        'm_wallet' : 0,
-        'r_wallet' : 0,
-        's_wallet' : 0,
+        'd_wallet' : 0,#Profit day
+        'r_wallet' : 0,#Direct commission
+        's_wallet' : 0,#System commission
+        'l_wallet' : 0,#Leadership commission
+        'ss_wallet' : 0,#Share sales
+        'sf_wallet' : 0,#Share Fund
         'max_out' : 0,
         'total_earn' : 0,
         'img_profile' :'assets/imgs/logo.png',
