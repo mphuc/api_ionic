@@ -341,6 +341,7 @@ def get_infomation_user():
           'img_passport_backside' : user['personal_info']['img_passport_backside'],
           'telephone' : user['telephone'],
           'firstname' : user['personal_info']['firstname'],
+          'address' : user['personal_info']['address'],
           'lastname' : user['personal_info']['lastname'],
           'date_birthday' : user['personal_info']['date_birthday'],
           'verification' : user['verification']
