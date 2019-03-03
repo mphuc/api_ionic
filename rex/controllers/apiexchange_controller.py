@@ -226,6 +226,7 @@ def get_notification():
     array = []
     for item in list_notifications:
       array.append({
+         "_id" : str(item['_id']),
         "username" : item['username'],
         "content" : item['content'],
         "type" : item['type'],
