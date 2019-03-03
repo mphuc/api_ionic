@@ -275,6 +275,30 @@ def upload_img_profile(customer_id):
         'name_ifle' : url_img_save
     })
     
+@api_ctrl.route('/upload-img-passport-fontside/<customer_id>', methods=['GET', 'POST'])
+def upload_img_passport_fontside(customer_id):
+    
+    SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
+    
+    upload     = request.files.get('file')
+    
+    save_path = SITE_ROOT+'/../static/img/upload'.format(category='category')
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+
+    name = upload.filename
+    file_path = "{path}/{file}".format(path=save_path, file=name)
+    upload.save(file_path)
+    
+    url_img_save = 'https://api.buy-sellpro.co/static/img/upload/'+name
+    print url_img_save
+
+    user = db.users.find_one({'customer_id': customer_id})
+    user['personal_info']['img_passport_fontside'] = url_img_save
+    db.users.save(user)
+    return json.dumps({
+        'status': 'complete'
+    })
 
 
 def create_account(email,password,p_node):
