@@ -252,13 +252,14 @@ def get_version_app():
     })
 
 
-@api_ctrl.route('/upload-img-profile', methods=['GET', 'POST'])
-def upload_img_profile():
+@api_ctrl.route('/upload-img-profile/<customer_id>', methods=['GET', 'POST'])
+def upload_img_profile(customer_id):
     
     SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
     
     upload     = request.files.get('file')
     print upload
+    print customer_id
     save_path = SITE_ROOT+'/../static/img/upload'.format(category='category')
     if not os.path.exists(save_path):
         os.makedirs(save_path)
