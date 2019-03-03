@@ -288,7 +288,7 @@ def get_support_id():
 @apiexchange_ctrl.route('/load-price', methods=['GET', 'POST'])
 def load_price():
     ticker = db.tickers.find_one({})
-    print ticker
+    
     return json.dumps({
         'status': 'complete', 
         'btc_usd': ticker['btc_usd'],
