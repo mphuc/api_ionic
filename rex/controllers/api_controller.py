@@ -252,8 +252,8 @@ def get_version_app():
     })
 
 
-@api_ctrl.route('/img', methods=['GET', 'POST'])
-def identity():
+@api_ctrl.route('/upload-img-profile', methods=['GET', 'POST'])
+def upload_img_profile():
     
     SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
     
@@ -263,13 +263,13 @@ def identity():
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-
     name = id_generator(25)+upload.filename
     file_path = "{path}/{file}".format(path=save_path, file=name)
     upload.save(file_path)
     print file_path
     return json.dumps({
         'status': 'complete', 
+        'file_path' : file_path
     })
     
 
