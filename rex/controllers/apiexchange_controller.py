@@ -213,6 +213,29 @@ def get_historys():
       })
     return json.dumps(array)
 
+@apiexchange_ctrl.route('/get-notification', methods=['GET', 'POST'])
+def get_notification():
+
+    dataDict = json.loads(request.data)
+    customer_id = dataDict['customer_id']
+    start = dataDict['start']
+    limit = dataDict['limit']
+    
+    list_notifications = db.notifications.find({'$and' : [{'$or' : [{'uid' : customer_id},{'type' : 'all'}]}]} ).sort([("date_added", -1)]).limit(limit).skip(start)
+
+    array = []
+    for item in list_notifications:
+      array.append({
+        "username" : item['username'],
+        "content" : item['content'],
+        "type" : item['type'],
+        "read" : item['read'],
+        "status" : item['status'],
+        "date_added" : (item['date_added']).strftime('%H:%M %d-%m-%Y')
+      })
+    return json.dumps(array)
+
+
 @apiexchange_ctrl.route('/get-history-transaction', methods=['GET', 'POST'])
 def get_history_transaction():
 
