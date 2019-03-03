@@ -258,17 +258,16 @@ def upload_img_profile(customer_id):
     SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
     
     upload     = request.files.get('file')
-    print upload
-    print customer_id
+    
     save_path = SITE_ROOT+'/../static/img/upload'.format(category='category')
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-    name = id_generator(25)+upload.filename
+    name = upload.filename
     file_path = "{path}/{file}".format(path=save_path, file=name)
     upload.save(file_path)
     
-    url_img_save = 'https://api.buy-sellpro.co/api/static/img/upload/'+name
+    url_img_save = 'https://api.buy-sellpro.co/static/img/upload/'+name
     print url_img_save
     db.users.update({ "customer_id" : customer_id }, { '$set': { "img_profile": url_img_save } })
     return json.dumps({
