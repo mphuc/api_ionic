@@ -253,7 +253,7 @@ def get_history_transaction():
       array.append({
         "username" : item['username'],
         "amount" : item['amount'],
-        "amount" : item['amount'],
+        "currency" : item['currency'],
         "type" : item['type'],
         "date_added" : (item['date_added']).strftime('%H:%M %d-%m-%Y')
       })

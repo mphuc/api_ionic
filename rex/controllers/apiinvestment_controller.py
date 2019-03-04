@@ -46,7 +46,7 @@ apiinvestment_ctrl = Blueprint('investment', __name__, static_folder='static', t
 
 @apiinvestment_ctrl.route('/testinvest', methods=['GET', 'POST'])
 def testinvest():
-    FnRefferalProgram('3201943430', '0.1', 'BTC')
+    caculator_profitDaily()
     return json.dumps({
         'status': 'complete' 
         
@@ -312,15 +312,63 @@ def FnRefferalProgram(customer_id, amount_invest, currency):
         new_balance_wallet = float(balance_wallet) + (float(amount_invest)*0.03*100000000)
         new_balance_wallet = float(new_balance_wallet)
 
-        
-
         db.users.update({ "_id" : ObjectId(customers_pnode['_id']) }, { '$set': {string_currency : new_balance_wallet,'total_earn': new_total_earn, 'r_wallet' :new_r_wallet } })
         
         detail = 'Account '+ str(customers['email']) + ' join the package '+ str(amount_invest) + ' ' + str(currency)
-        SaveHistory(customers_pnode['customer_id'],customers_pnode['username'],detail, float(amount_invest)*0.03, currency, 'Direct commission')
+        SaveHistory(customers_pnode['customer_id'],customers_pnode['email'],detail, float(amount_invest)*0.03, currency, 'Direct commission')
    
     return True
 
+def caculator_profitDaily():
+    
+    get_percent = db.profits.find_one({});
+    percent = get_percent['percent']
+
+    get_invest = db.investments.find({ "status": 1});
+    ticker = db.tickers.find_one({})
+    for x in get_invest:
+        
+        if x['currency'] == 'BTC': 
+            price_currency = ticker['btc_usd']
+            string_currency = 'btc_balance'
+        if x['currency'] == 'ETH':
+            price_currency = ticker['eth_usd']
+            string_currency = 'eth_balance'
+        if x['currency'] == 'LTC':
+            price_currency = ticker['ltc_usd']
+            string_currency = 'ltc_balance'
+        if x['currency'] == 'XRP':
+            price_currency = ticker['xrp_usd']
+            string_currency = 'xrp_balance'
+        if x['currency'] == 'USDT':
+            price_currency = ticker['usdt_usd']
+            string_currency = 'usdt_balance'
+
+        commission = float(x['package'])*float(percent)*float(price_currency)/100
+       
+        
+        customer = db.users.find_one({'customer_id': x['uid']})
+        if customer is not None:
+
+            d_wallet = float(customer['d_wallet'])
+            new_d_wallet = float(d_wallet) + float(commission)
+            new_d_wallet = float(new_d_wallet)
+
+            total_earn = float(customer['total_earn'])
+            new_total_earn = float(total_earn) + float(commission)
+            new_total_earn = float(new_total_earn)
+
+            balance_wallet = float(customer[string_currency])
+
+            new_balance_wallet = float(balance_wallet) + (float(x['package'])*float(percent)*1000000)
+            new_balance_wallet = float(new_balance_wallet)
+
+            db.users.update({ "_id" : ObjectId(customer['_id']) }, { '$set': {string_currency : new_balance_wallet,'total_earn': new_total_earn, 'd_wallet' :new_d_wallet } })
+            
+            detail = 'Received '+ str(percent) + '% of package '+ str(x['package']) + ' ' + str( x['currency'])
+            SaveHistory(customer['customer_id'],customer['email'],detail, float(x['package'])*float(percent)/100, x['currency'], 'Profit day')
+           
+    return True
 
 def SaveHistory(uid, username,detail, amount, currency,types):
     data_history = {
