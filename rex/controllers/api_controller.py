@@ -112,6 +112,7 @@ def login():
           })
         else:
           return json.dumps({
+            'customer_id' : user['customer_id'],
             'status': 'error', 
             'message': 'Account has not been activated yet' 
           })  
