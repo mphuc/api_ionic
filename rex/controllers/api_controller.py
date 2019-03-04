@@ -113,7 +113,7 @@ def login():
         else:
           return json.dumps({
             'customer_id' : user['customer_id'],
-            'status': 'error', 
+            'status': 'error_active_email', 
             'message': 'Account has not been activated yet' 
           })  
 
