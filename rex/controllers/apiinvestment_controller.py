@@ -316,7 +316,7 @@ def FnRefferalProgram(customer_id, amount_invest, currency):
 
         db.users.update({ "_id" : ObjectId(customers_pnode['_id']) }, { '$set': {string_currency : new_balance_wallet,'total_earn': new_total_earn, 'r_wallet' :new_r_wallet } })
         
-        detail = str(customers['email']) + ' - '+ str(amount_invest) + ' ' + str(currency)
+        detail = 'Account '+ str(customers['email']) + ' join the package '+ str(amount_invest) + ' ' + str(currency)
         SaveHistory(customers_pnode['customer_id'],customers_pnode['username'],detail, float(amount_invest)*0.03, currency, 'Direct commission')
    
     return True

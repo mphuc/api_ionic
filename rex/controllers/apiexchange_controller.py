@@ -276,7 +276,7 @@ def get_history_profit():
       array.append({
         "username" : item['username'],
         "amount" : item['amount'],
-        "amount" : item['amount'],
+        "currency" : item['currency'],
         "type" : item['type'],
         "detail" : item['detail'],
         "date_added" : (item['date_added']).strftime('%H:%M %d-%m-%Y')
