@@ -81,10 +81,11 @@ def register():
           'message': 'Email has been used. Please use another email account' 
       })
     else:
-      create_account(email,password,p_node)
+      customer_id = create_account(email,password,p_node)
       #sendmail forgot password
       return json.dumps({
           'status': 'complete', 
+          'customer_id' : customer_id,
           'message': 'Account successfully created' 
       })
 
@@ -452,7 +453,7 @@ def create_account(email,password,p_node):
       } 
     }
     customer = db.users.insert(datas)
-    return True
+    return customer_id
 
 def send_mail_register(email,usernames,link_active):
     html = """\
