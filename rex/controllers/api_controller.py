@@ -410,7 +410,7 @@ def create_account(email,password,p_node):
         'p_binary': '',
         'left': '',
         'right': '',
-        'level': 1,
+        'level': 0,
         'telephone' : '',
         'position': '',
         'creation': datetime.utcnow(),
@@ -432,7 +432,7 @@ def create_account(email,password,p_node):
         'xrp_address' : '',
         'usdt_address' : '',
         'coin_address' : '',
-
+        'total_node' : 0,
         'status' : 0,
         'type': 0,
         'code_active' : code_active,

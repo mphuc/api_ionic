@@ -46,7 +46,8 @@ apiinvestment_ctrl = Blueprint('investment', __name__, static_folder='static', t
 
 @apiinvestment_ctrl.route('/testinvest', methods=['GET', 'POST'])
 def testinvest():
-    caculator_profitDaily()
+    Systemcommission('32019433964','1','BTC')
+    #Getlevel('32019433963')
     return json.dumps({
         'status': 'complete' 
         
@@ -92,7 +93,7 @@ def active_package():
         new_balance_sub = float(user[string_query]) - float(amount)*100000000
 
       
-        db.users.update({ "customer_id" : customer_id }, { '$set': { string_query: float(new_balance_sub)} })
+        db.users.update({ "customer_id" : customer_id }, { '$set': { string_query: float(new_balance_sub),'investment' : amount_usd} })
         
         #save lich su
         data_investment = {
@@ -112,6 +113,10 @@ def active_package():
             'currency' : currency
         }
         db.investments.insert(data_investment)
+
+        FnRefferalProgram(customer_id, amount, currency)
+
+        TotalnodeAmount(customer_id, amount,currency)
 
         return json.dumps({
             'status': 'complete', 
@@ -280,42 +285,43 @@ def FnRefferalProgram(customer_id, amount_invest, currency):
     if customers['p_node'] != '0' or customers['p_node'] != '':
         customers_pnode = db.users.find_one({"customer_id" : customers['p_node'] })
 
-        ticker = db.tickers.find_one({})
+        if float(customers_pnode['investment'] > 0):
+            ticker = db.tickers.find_one({})
 
-        if currency == 'BTC': 
-            price_currency = ticker['btc_usd']
-            string_currency = 'btc_balance'
-        if currency == 'ETH':
-            price_currency = ticker['eth_usd']
-            string_currency = 'eth_balance'
-        if currency == 'LTC':
-            price_currency = ticker['ltc_usd']
-            string_currency = 'ltc_balance'
-        if currency == 'XRP':
-            price_currency = ticker['xrp_usd']
-            string_currency = 'xrp_balance'
-        if currency == 'USDT':
-            price_currency = ticker['usdt_usd']
-            string_currency = 'usdt_balance'
-        
-        commission = float(price_currency)*float(amount_invest)*0.03
+            if currency == 'BTC': 
+                price_currency = ticker['btc_usd']
+                string_currency = 'btc_balance'
+            if currency == 'ETH':
+                price_currency = ticker['eth_usd']
+                string_currency = 'eth_balance'
+            if currency == 'LTC':
+                price_currency = ticker['ltc_usd']
+                string_currency = 'ltc_balance'
+            if currency == 'XRP':
+                price_currency = ticker['xrp_usd']
+                string_currency = 'xrp_balance'
+            if currency == 'USDT':
+                price_currency = ticker['usdt_usd']
+                string_currency = 'usdt_balance'
+            
+            commission = float(price_currency)*float(amount_invest)*0.03
 
-        r_wallet = float(customers_pnode['r_wallet'])
-        new_r_wallet = float(r_wallet) + float(commission)
-        new_r_wallet = float(new_r_wallet)
+            r_wallet = float(customers_pnode['r_wallet'])
+            new_r_wallet = float(r_wallet) + float(commission)
+            new_r_wallet = float(new_r_wallet)
 
-        total_earn = float(customers_pnode['total_earn'])
-        new_total_earn = float(total_earn) + float(commission)
-        new_total_earn = float(new_total_earn)
+            total_earn = float(customers_pnode['total_earn'])
+            new_total_earn = float(total_earn) + float(commission)
+            new_total_earn = float(new_total_earn)
 
-        balance_wallet = float(customers_pnode[string_currency])
-        new_balance_wallet = float(balance_wallet) + (float(amount_invest)*0.03*100000000)
-        new_balance_wallet = float(new_balance_wallet)
+            balance_wallet = float(customers_pnode[string_currency])
+            new_balance_wallet = float(balance_wallet) + (float(amount_invest)*0.03*100000000)
+            new_balance_wallet = float(new_balance_wallet)
 
-        db.users.update({ "_id" : ObjectId(customers_pnode['_id']) }, { '$set': {string_currency : new_balance_wallet,'total_earn': new_total_earn, 'r_wallet' :new_r_wallet } })
-        
-        detail = 'Account '+ str(customers['email']) + ' join the package '+ str(amount_invest) + ' ' + str(currency)
-        SaveHistory(customers_pnode['customer_id'],customers_pnode['email'],detail, float(amount_invest)*0.03, currency, 'Direct commission')
+            db.users.update({ "_id" : ObjectId(customers_pnode['_id']) }, { '$set': {string_currency : new_balance_wallet,'total_earn': new_total_earn, 'r_wallet' :new_r_wallet } })
+            
+            detail = 'Account '+ str(customers['email']) + ' join the package '+ str(amount_invest) + ' ' + str(currency)
+            SaveHistory(customers_pnode['customer_id'],customers_pnode['email'],detail, float(amount_invest)*0.03, currency, 'Direct commission')
    
     return True
 
@@ -367,9 +373,123 @@ def caculator_profitDaily():
             
             detail = 'Received '+ str(percent) + '% of package '+ str(x['package']) + ' ' + str( x['currency'])
             SaveHistory(customer['customer_id'],customer['email'],detail, float(x['package'])*float(percent)/100, x['currency'], 'Profit day')
-           
+            
+
+            Systemcommission(customer['customer_id'],float(x['package'])*float(percent)/100,x['currency'])
+
     return True
 
+def Systemcommission(customer_id,amount_receive,currency):
+    customers = db.users.find_one({"customer_id" : customer_id })
+    email_customer_receive = customers['email']
+    ticker = db.tickers.find_one({})
+    i = 0
+    while i < 12:
+        i += 1 
+        if customers['p_node'] != '0' or customers['p_node'] != '':
+            customers = db.users.find_one({"customer_id" : customers['p_node'] })
+            if customers is None:
+                return True
+            else:
+                percent_receve = 0
+                if Getlevel(customers['customer_id']) >=1 and i == 1:
+                    #hoa hong dong 1 - 100%
+                    percent_receve = 100
+                if Getlevel(customers['customer_id']) >=1 and i == 2:
+                    #hoa hong dong 2 - 10%
+                    percent_receve = 10
+                if Getlevel(customers['customer_id']) >=2 and i == 3:
+                    #hoa hong dong 3 - 10%
+                    percent_receve = 10
+                if Getlevel(customers['customer_id']) >=2 and i == 4:
+                    #hoa hong dong 4 - 10%
+                    percent_receve = 10
+                if Getlevel(customers['customer_id']) >=3 and i == 5:
+                    #hoa hong dong 5 - 10%
+                    percent_receve = 10
+                if Getlevel(customers['customer_id']) >=3 and i == 6:
+                    #hoa hong dong 6 - 10%
+                    percent_receve = 10
+                if Getlevel(customers['customer_id']) >=4 and i == 7:
+                    #hoa hong dong 7 - 10%
+                    percent_receve = 10
+                if Getlevel(customers['customer_id']) >=4 and i == 8:
+                    #hoa hong dong 8 - 10%
+                    percent_receve = 10
+                if Getlevel(customers['customer_id']) >=5 and i == 9:
+                    #hoa hong dong 9 - 10%
+                    percent_receve = 10
+                if Getlevel(customers['customer_id']) >=5 and i == 10:
+                    #hoa hong dong 10 - 10%
+                    percent_receve = 10
+                if Getlevel(customers['customer_id']) >=6 and i == 11:
+                    #hoa hong dong 11 - 10%
+                    percent_receve = 10
+                if Getlevel(customers['customer_id']) >=6 and i == 12:
+                    #hoa hong dong 12 - 10%
+                    percent_receve = 10
+                if int(percent_receve) > 0:
+                    print i
+
+                    if currency == 'BTC': 
+                        price_currency = ticker['btc_usd']
+                        string_currency = 'btc_balance'
+                    if currency == 'ETH':
+                        price_currency = ticker['eth_usd']
+                        string_currency = 'eth_balance'
+                    if currency == 'LTC':
+                        price_currency = ticker['ltc_usd']
+                        string_currency = 'ltc_balance'
+                    if currency == 'XRP':
+                        price_currency = ticker['xrp_usd']
+                        string_currency = 'xrp_balance'
+                    if currency == 'USDT':
+                        price_currency = ticker['usdt_usd']
+                        string_currency = 'usdt_balance'
+
+                    commission = float(amount_receive)*float(percent_receve)*float(price_currency)/100
+
+                    s_wallet = float(customers['s_wallet'])
+                    new_s_wallet = float(s_wallet) + float(commission)
+                    new_s_wallet = float(new_s_wallet)
+
+                    total_earn = float(customers['total_earn'])
+                    new_total_earn = float(total_earn) + float(commission)
+                    new_total_earn = float(new_total_earn)
+
+                    balance_wallet = float(customers[string_currency])
+
+                    new_balance_wallet = float(balance_wallet) + (float(amount_receive)*float(percent_receve)*1000000)
+                    new_balance_wallet = float(new_balance_wallet)
+
+                    db.users.update({ "_id" : ObjectId(customers['_id']) }, { '$set': {string_currency : new_balance_wallet,'total_earn': new_total_earn, 's_wallet' :new_s_wallet } })
+                    
+                    detail = 'F'+str(i)+' '+ str(email_customer_receive) + ' receives ' + str(amount_receive)+ ' ' +str( currency) +' daily interest.'
+                    SaveHistory(customers['customer_id'],customers['email'],detail, float(amount_receive)*float(percent_receve)/100, currency, 'System commission')
+        else:
+            break
+    return True
+
+#def Leadership_commission(customer_id,amount_receive,currency):
+
+def Getlevel(customer_id):
+    count_f1 = db.users.find({"p_node" : customer_id }).count()
+    level = 0
+    if int(count_f1) >= 2:
+        level = 1
+    if int(count_f1) >= 4:
+        level = 2
+    if int(count_f1) >= 6:
+        level = 3
+    if int(count_f1) >= 8:
+        level = 4
+    if int(count_f1) >= 10:
+        level = 5
+    if int(count_f1) >= 12:
+        level = 6
+
+    db.users.update({ "customer_id" : customer_id }, { '$set': { "level": level }})
+    return level
 def SaveHistory(uid, username,detail, amount, currency,types):
     data_history = {
         'uid':  uid,
@@ -381,4 +501,21 @@ def SaveHistory(uid, username,detail, amount, currency,types):
         'date_added' : datetime.utcnow()
     }
     db.historys.insert(data_history)
+    return True
+
+def TotalnodeAmount(user_id, amount_invest):
+    customer_ml = db.users.find_one({"customer_id" : user_id })
+    if customer_ml['p_node'] != '':
+        while (True):
+            customer_ml_p_node = db.users.find_one({"customer_id" : customer_ml['p_node'] })
+            if customer_ml_p_node is None:
+                break
+            else:
+                customers = db.users.find_one({"customer_id" : customer_ml_p_node['customer_id'] })
+                customers['total_node'] = float(customers['total_node']) + float(amount_invest)
+                db.users.save(customers)
+                
+            customer_ml = db.users.find_one({"customer_id" : customer_ml_p_node['customer_id'] })
+            if customer_ml is None:
+                break
     return True
