@@ -221,23 +221,22 @@ def forgot_password():
 def resend_code():
    
     dataDict = json.loads(request.data)
-    email = dataDict['email'].lower()
+    customer_id = dataDict['customer_id'].lower()
      
-    user = db.User.find_one({'email': email})
+    user = db.User.find_one({'customer_id': customer_id})
 
     if user is None:
         return json.dumps({
           'status': 'error', 
-          'message': 'Email does not exist. Please try again' 
+          'message': 'Please try again' 
       })
     else:
         if int (user['active_email']) != 1:
           
-
-          code_active = id_generator()
-          print code_active
-          db.users.update({"email": email}, { "$set": { "code_active":code_active} })
-          #sendmail Resend Code
+          # code_active = id_generator()
+          # print code_active
+          # db.users.update({"customer_id": customer_id}, { "$set": { "code_active":code_active} })
+          #sendmail Resend Code user['code_active']
           return json.dumps({
             'status': 'complete', 
             'message': 'Resend Code successfully' 
