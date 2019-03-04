@@ -44,6 +44,13 @@ __author__ = 'asdasd'
 
 apiinvestment_ctrl = Blueprint('investment', __name__, static_folder='static', template_folder='templates')
 
+@apiinvestment_ctrl.route('/testinvest', methods=['GET', 'POST'])
+def testinvest():
+    FnRefferalProgram('3201943430', '0.1', 'BTC')
+    return json.dumps({
+        'status': 'complete' 
+        
+    })
 @apiinvestment_ctrl.route('/active-package', methods=['GET', 'POST'])
 def active_package():
     dataDict = json.loads(request.data)
@@ -266,3 +273,64 @@ def withdraw_submit():
       return json.dumps({
           'status': 'error'
       })
+
+
+def FnRefferalProgram(customer_id, amount_invest, currency):
+    customers = db.users.find_one({"customer_id" : customer_id })
+    if customers['p_node'] != '0' or customers['p_node'] != '':
+        customers_pnode = db.users.find_one({"customer_id" : customers['p_node'] })
+
+        ticker = db.tickers.find_one({})
+
+        if currency == 'BTC': 
+            price_currency = ticker['btc_usd']
+            string_currency = 'btc_balance'
+        if currency == 'ETH':
+            price_currency = ticker['eth_usd']
+            string_currency = 'eth_balance'
+        if currency == 'LTC':
+            price_currency = ticker['ltc_usd']
+            string_currency = 'ltc_balance'
+        if currency == 'XRP':
+            price_currency = ticker['xrp_usd']
+            string_currency = 'xrp_balance'
+        if currency == 'USDT':
+            price_currency = ticker['usdt_usd']
+            string_currency = 'usdt_balance'
+        
+        commission = float(price_currency)*float(amount_invest)*0.03
+
+        r_wallet = float(customers_pnode['r_wallet'])
+        new_r_wallet = float(r_wallet) + float(commission)
+        new_r_wallet = float(new_r_wallet)
+
+        total_earn = float(customers_pnode['total_earn'])
+        new_total_earn = float(total_earn) + float(commission)
+        new_total_earn = float(new_total_earn)
+
+        balance_wallet = float(customers_pnode[string_currency])
+        new_balance_wallet = float(balance_wallet) + (float(amount_invest)*0.03*100000000)
+        new_balance_wallet = float(new_balance_wallet)
+
+        
+
+        db.users.update({ "_id" : ObjectId(customers_pnode['_id']) }, { '$set': {string_currency : new_balance_wallet,'total_earn': new_total_earn, 'r_wallet' :new_r_wallet } })
+        
+        detail = str(customers['email']) + ' - '+ str(amount_invest) + ' ' + str(currency)
+        SaveHistory(customers_pnode['customer_id'],customers_pnode['username'],detail, float(amount_invest)*0.03, currency, 'Direct commission')
+   
+    return True
+
+
+def SaveHistory(uid, username,detail, amount, currency,types):
+    data_history = {
+        'uid':  uid,
+        'username': username,
+        'detail':  detail,
+        'amount': amount,
+        'currency' :  currency,
+        'type' : types,
+        'date_added' : datetime.utcnow()
+    }
+    db.historys.insert(data_history)
+    return True

@@ -11,17 +11,11 @@ class History(Document):
 
     structure = {
         'uid':  unicode,
-        'user_id': unicode,
         'username': unicode,
         'detail':  unicode,
         'amount': float,
-        'amount_sub' :  unicode,
-        'amount_add' :  unicode,
-        'amount_rest' : unicode,
+        'currency' :  unicode,
         'type':  unicode,
-        'wallet': unicode,
-        'txtid':  unicode,
-        'rate': unicode,
         'date_added' : datetime.datetime
     }
     use_dot_notation = True

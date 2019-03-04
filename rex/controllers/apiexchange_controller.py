@@ -278,6 +278,7 @@ def get_history_profit():
         "amount" : item['amount'],
         "amount" : item['amount'],
         "type" : item['type'],
+        "detail" : item['detail'],
         "date_added" : (item['date_added']).strftime('%H:%M %d-%m-%Y')
       })
     return json.dumps(array)
