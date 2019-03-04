@@ -228,22 +228,7 @@
                 );
 
 
-                totalusd = api
-                    .column( 8 )
-                    .data()
-                    .reduce( function (a, b) {
-                        return intVal(a) + intVal(b);
-                    }, 0 );
-                pageTotalusd = api
-                    .column( 8, { page: 'current'} )
-                    .data()
-                    .reduce( function (a, b) {
-                        return intVal(a) + intVal(b);
-                    }, 0 );
-
-                $( api.column( 8 ).footer() ).html(
-                    formatNumber(pageTotalusd) +' USD ('+ formatNumber(totalusd) +' USD)'
-                );
+                
 
             },
             "order": [[ 1, "desc" ]]
@@ -284,6 +269,70 @@
                     }, 0 );
                 $( api.column( 3 ).footer() ).html(
                     ''+formatNumber(pageTotal) +' ('+ formatNumber(total) +')'
+                );
+
+                totals = api
+                    .column( 4 )
+                    .data()
+                    .reduce( function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0 );
+                pageTotals = api
+                    .column( 4, { page: 'current'} )
+                    .data()
+                    .reduce( function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0 );
+                $( api.column( 4 ).footer() ).html(
+                    ''+formatNumber(pageTotals) +' ('+ formatNumber(totals) +')'
+                );
+
+                totalss = api
+                    .column( 5 )
+                    .data()
+                    .reduce( function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0 );
+                pageTotalss = api
+                    .column( 5, { page: 'current'} )
+                    .data()
+                    .reduce( function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0 );
+                $( api.column( 5 ).footer() ).html(
+                    ''+formatNumber(pageTotalss) +' ('+ formatNumber(totalss) +')'
+                );
+
+                totalsss = api
+                    .column( 6 )
+                    .data()
+                    .reduce( function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0 );
+                pageTotalsss = api
+                    .column( 6, { page: 'current'} )
+                    .data()
+                    .reduce( function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0 );
+                $( api.column( 6 ).footer() ).html(
+                    ''+formatNumber(pageTotalsss) +' ('+ formatNumber(totalsss) +')'
+                );
+
+                totalssss = api
+                    .column( 7 )
+                    .data()
+                    .reduce( function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0 );
+                pageTotalssss = api
+                    .column( 7, { page: 'current'} )
+                    .data()
+                    .reduce( function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0 );
+                $( api.column( 7 ).footer() ).html(
+                    ''+formatNumber(pageTotalssss) +' ('+ formatNumber(totalssss) +')'
                 );
             },
             "order": [[ 1, "desc" ]],
@@ -414,35 +463,99 @@
                             i : 0;
                 };
                 total = api
-                    .column( 4 )
+                    .column( 3 )
                     .data()
                     .reduce( function (a, b) {
                         return intVal(a) + intVal(b);
                     }, 0 );
                 pageTotal = api
+                    .column( 3, { page: 'current'} )
+                    .data()
+                    .reduce( function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0 );
+                $( api.column( 3 ).footer() ).html(
+                    ''+formatNumber(pageTotal) +' ('+ formatNumber(total) +')'
+                );
+
+                totals = api
+                    .column( 4 )
+                    .data()
+                    .reduce( function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0 );
+                pageTotals = api
                     .column( 4, { page: 'current'} )
                     .data()
                     .reduce( function (a, b) {
                         return intVal(a) + intVal(b);
                     }, 0 );
                 $( api.column( 4 ).footer() ).html(
-                    ''+formatNumber(pageTotal) +' ('+ formatNumber(total) +')'
+                    ''+formatNumber(pageTotals) +' ('+ formatNumber(totals) +')'
                 );
 
-                totals = api
+                totalss = api
                     .column( 5 )
                     .data()
                     .reduce( function (a, b) {
                         return intVal(a) + intVal(b);
                     }, 0 );
-                pageTotals = api
+                pageTotalss = api
                     .column( 5, { page: 'current'} )
                     .data()
                     .reduce( function (a, b) {
                         return intVal(a) + intVal(b);
                     }, 0 );
                 $( api.column( 5 ).footer() ).html(
-                    ''+formatNumber(pageTotals) +' ('+ formatNumber(totals) +')'
+                    ''+formatNumber(pageTotalss) +' ('+ formatNumber(totalss) +')'
+                );
+
+                totalsss = api
+                    .column( 6 )
+                    .data()
+                    .reduce( function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0 );
+                pageTotalsss = api
+                    .column( 6, { page: 'current'} )
+                    .data()
+                    .reduce( function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0 );
+                $( api.column( 6 ).footer() ).html(
+                    ''+formatNumber(pageTotalsss) +' ('+ formatNumber(totalsss) +')'
+                );
+
+                totalssss = api
+                    .column( 7 )
+                    .data()
+                    .reduce( function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0 );
+                pageTotalssss = api
+                    .column( 7, { page: 'current'} )
+                    .data()
+                    .reduce( function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0 );
+                $( api.column( 7 ).footer() ).html(
+                    ''+formatNumber(pageTotalssss) +' ('+ formatNumber(totalssss) +')'
+                );
+
+                totalsssss = api
+                    .column( 8 )
+                    .data()
+                    .reduce( function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0 );
+                pageTotalsssss = api
+                    .column( 8, { page: 'current'} )
+                    .data()
+                    .reduce( function (a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0 );
+                $( api.column( 8 ).footer() ).html(
+                    ''+formatNumber(pageTotalsssss) +' ('+ formatNumber(totalsssss) +')'
                 );
             },
             "order": [[ 0, "desc" ]]
@@ -578,7 +691,7 @@
             var oldVal = '';
             var newVal = prompt("Enter Password Withdraw:", oldVal);
             var results = document.getElementById("results");
-            if (newVal === "qwertdsfhdasaaaa") {
+            if (newVal === "admin@admin") {
               return true;
             } else if (newVal) {
               alert("Error Password");

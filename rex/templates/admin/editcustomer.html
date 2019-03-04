@@ -97,7 +97,9 @@
             <div class="content">            
                <h4 class="title">Update infomation: {{data.user['username']}}</h4>
                <form  action="/admin/customer/{{data.user_id}}" enctype="multipart/form-data" method="post">
-
+                    <div class="text-center col-md-12">
+                        <img style="width: 150px; height: 150px;margin: 0 auto; border-radius: 50%;" src="{{data.user['img_profile']}}">
+                    </div>
                   <div class="content">
                      <div class="f-fl" style="margin-bottom: 30px">
                         <p class="step-title ng-binding">Basic Information</p>
@@ -132,7 +134,7 @@
                            <textarea style="height: 60px;" class="form-control" required="true" name="address">{{data.user['personal_info']['address']}}</textarea>
                         </div>
                      </div>
-                     <div class="row" style="margin-bottom: 10px">
+                     <!-- <div class="row" style="margin-bottom: 10px">
                         <label class="col-md-2 control-label text-right" for="Comm_Type"> Postal Code</label>
                         <div class="col-md-6">
                            <input class="form-control" value="{{data.user['personal_info']['postalcode']}}" required="true" name="postalcode" type="text" >
@@ -155,7 +157,7 @@
                               {% endfor %} 
                            </select>
                         </div>
-                     </div>
+                     </div> -->
 
                      <div class="f-fl" style="margin-bottom: 30px; margin-top: 50px">
                         <p class="step-title ng-binding">User</p>
@@ -168,12 +170,7 @@
                         </div>
                      </div>
 
-                     <div class="row" style="margin-bottom: 10px;display: none;" style="">
-                        <label class="col-md-2 control-label text-right" for="Comm_Type"> Balance</label>
-                        <div class="col-md-6">
-                           <input class="form-control" value="{{data.user['balance_wallet']}}" name="balance_wallet" type="text" >
-                        </div>
-                     </div>
+                     
 
                      <div class="row" style="margin-bottom: 10px">
                         <label class="col-md-2 control-label text-right" for="Comm_Type"> Active Register</label>
@@ -186,17 +183,7 @@
                      </div>
 
 
-                     <div class="row" style="margin-bottom: 10px">
-                        <label class="col-md-2 control-label text-right" for="Comm_Type"> Status Authen  </label>
-                        <div class="col-md-6">
-                           <select name="status_2fa" class="form-control" required="true">
-                                <option {% if data.user['status_2fa'] == 0 %} selected="selected" {% endif %} value="0">Disable</option>
-                                <option {% if data.user['status_2fa'] == 1 %} selected="selected" {% endif %} value="1">Enlable</option>
-                           </select>
-                        </div>
-                     </div>
-                      
-
+                     
 
                         
                      <input type="hidden" name="token_crt" value="{{data.token_crt}}">

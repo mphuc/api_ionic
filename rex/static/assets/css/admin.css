@@ -1,5 +1,5 @@
 body .wrapper{
-  background: #0598ab;
+  background: #4CAF50;
 }
 #min-date,#max-date,#min-date-history,#max-date-history{
   border-radius: 5px;
@@ -32,4 +32,16 @@ body .wrapper{
   background: #eee;
   float: right;
   margin-left: 10px;
+}
+.navbar .navbar-nav > li > a.btn.btn-warning.btn-fill, .btn-warning.btn-fill {
+    background: #FF5722;
+    padding: 12px 20px;
+    font-weight: 500;
+    color: #fff;
+    font-size: 18px;
+    width: 100%;
+    border-radius: 0px;
+    border: none;
+    text-transform: uppercase;
+    border-radius: 10px;
 }

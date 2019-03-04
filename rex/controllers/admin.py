@@ -304,17 +304,7 @@ def profitsetup():
 
     profit = db.profits.find_one({})
     if request.method == 'POST':
-        
-        profit['500'] = request.form['package-2']
-        profit['1000'] = request.form['package-3']
-        profit['3000'] = request.form['package-4']
-        profit['5000'] = request.form['package-5']
-        profit['10000'] = request.form['package-6']
-        profit['30000'] = request.form['package-7']
-        profit['50000'] = request.form['package-8']
-        profit['100000'] = request.form['package-9']
-        profit['500000'] = request.form['package-10']
-        profit['1000000'] = request.form['package-11']
+        profit['percent'] = request.form['percent']
         db.profits.save(profit) 
     data ={
             'menu' : 'profit-setup',

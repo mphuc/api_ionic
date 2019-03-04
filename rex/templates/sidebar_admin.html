@@ -9,7 +9,7 @@
       <img src="/static/img/logo.png" alt="Worldtrader" style=" width: 70px; ">
       </a>
    </div>
-   <div class="sidebar-wrapper" style=" background-color: #121734; ">
+   <div class="sidebar-wrapper" style=" background-color: #4CAF50; ">
       <ul class="nav">
        <!-- =========================== -->
       {% if data.menu == 'dashboard' %}
@@ -145,7 +145,7 @@
         <li class="active">
             <a href="/admin/profit">
               
-               <p>History Direct Bonus</p>
+               <p>History Direct commission</p>
             </a>
          </li>
      {% else %}
@@ -161,14 +161,14 @@
         <li class="active">
             <a href="/admin/profit-system">
               
-               <p>History Network Bonus</p>
+               <p>History System commission</p>
             </a>
          </li>
      {% else %}
        <li>
             <a href="/admin/profit-system">
                
-               <p>History Network Bonus</p>
+               <p>History System commission</p>
             </a>
          </li>
      {% endif %}
@@ -177,14 +177,14 @@
         <li class="active">
             <a href="/admin/profit-generations">
               
-               <p>History Generations Bonus</p>
+               <p>History Leadership commission</p>
             </a>
          </li>
      {% else %}
        <li>
             <a href="/admin/profit-generations">
                
-               <p>History Generations Bonus</p>
+               <p>History Leadership commission</p>
             </a>
          </li>
      {% endif %}
@@ -205,7 +205,41 @@
          </li>
      {% endif %}
 
-     {% if data.menu == 'transfer_history' %}
+
+     {% if data.menu == 'share-sales' %}
+        <li class="active">
+            <a href="/admin/share-sales">
+              
+               <p>History Share sales</p>
+            </a>
+         </li>
+     {% else %}
+       <li>
+            <a href="/admin/share-sales">
+               
+               <p>History Share sales</p>
+            </a>
+         </li>
+     {% endif %}
+
+
+     {% if data.menu == 'share-sales' %}
+        <li class="active">
+            <a href="/admin/share-fund">
+              
+               <p>History Share Fund</p>
+            </a>
+         </li>
+     {% else %}
+       <li>
+            <a href="/admin/share-fund">
+               
+               <p>History Share Fund</p>
+            </a>
+         </li>
+     {% endif %}
+
+     <!-- {% if data.menu == 'transfer_history' %}
         <li class="active">
             <a href="/admin/transfer-history">
               
@@ -219,7 +253,7 @@
                <p>History Transfer</p>
             </a>
          </li>
-     {% endif %}
+     {% endif %} -->
 
 
       {% if data.menu == 'notifications' %}
@@ -236,7 +270,7 @@
          </li>
      {% endif %}
 
-      {% if data.menu == 'sendmail' %}
+     <!--  {% if data.menu == 'sendmail' %}
         <li class="active">
             <a href="/admin/create-sendmail">
                <p>Sendmail</p>
@@ -248,7 +282,7 @@
                <p>Sendmail</p>
             </a>
          </li>
-     {% endif %}
+     {% endif %} -->
 
      {% if data.menu == 'support' %}
         <li class="active">

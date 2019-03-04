@@ -35,9 +35,9 @@
                                                     <th>BTC</th>
                                                     <th>ETH</th>
                                                     <th>LTC</th>
-                                                    <th>BCH</th>
+                                                    <th>XRP</th>
                                                     <th>USDT</th>
-                                                    <th>USD</th>
+                                                    <!-- <th>USD</th> -->
                                                     <th>Wallet</th>               
                                                     <th>Txid</th>
                                                     
@@ -52,9 +52,9 @@
                                                     <td>{% if item.type == 'BTC' %}{{ item.amount}}{% else %}0{% endif %}</td>
                                                     <td>{% if item.type == 'ETH' %}{{ item.amount}}{% else %}0{% endif %}</td>
                                                     <td>{% if item.type == 'LTC' %}{{ item.amount}}{% else %}0{% endif %}</td>
-                                                    <td>{% if item.type == 'BCH' %}{{ item.amount}}{% else %}0{% endif %}</td>
+                                                    <td>{% if item.type == 'XRP' %}{{ item.amount}}{% else %}0{% endif %}</td>
                                                     <td>{% if item.type == 'USDT' %}{{ item.amount}}{% else %}0{% endif %}</td>
-                                                    <td>{{ item.amount_usd | number_format}}</td>
+                                                    <!-- <td>{{ item.amount_usd | number_format}}</td> -->
                                                     <td>{{ item.address }}</td>
                                                    
                                                     <td><a href="https://blockchain.info/tx/{{ item.tx }}"> Detail</a> </td>
@@ -71,8 +71,7 @@
                                                     <th ></th>
                                                     <th ></th>
                                                     <th ></th>
-                                                    <th ></th>
-                                                    <th ></th>
+                                                      
                                                 </tr>
                                             </tfoot>
                                         </table>

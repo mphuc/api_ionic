@@ -190,7 +190,7 @@ def AdminGetBalance():
     
     balances_btc = 0
     balances_ltc = 0
-    balances_bch = 0
+    balances_xrp = 0
     balances_eth = 0
     balances_usdt = 0
 
@@ -199,8 +199,8 @@ def AdminGetBalance():
         balances_btc = balances['result']['BTC']['balancef']
     if balances['result'].has_key('LTC') is  True:
         balances_ltc = balances['result']['LTC']['balancef']
-    if balances['result'].has_key('BCH') is  True:
-        balances_bch = balances['result']['BCH']['balancef']
+    if balances['result'].has_key('XRP') is  True:
+        balances_xrp = balances['result']['XRP']['balancef']
     if balances['result'].has_key('ETH') is  True:
         balances_eth = balances['result']['ETH']['balancef']
     if balances['result'].has_key('USDT') is  True:
@@ -209,7 +209,7 @@ def AdminGetBalance():
     return json.dumps({
         'balances_btc' : balances_btc,
         'balances_ltc' : balances_ltc,
-        'balances_bch' : balances_bch,
+        'balances_xrp' : balances_xrp,
         'balances_eth' : balances_eth,
         'balances_usdt' : balances_usdt
     })
@@ -355,26 +355,19 @@ def SupportCustomerID(user_id):
         lastname = request.form['lastname']
         date_birthday = request.form['date_birthday']
         address = request.form['address']
-        postalcode = request.form['postalcode']
-        city = request.form['city']
-        country = request.form['country']
-
-        status_2fa = request.form['status_2fa']
+        
         active_email = request.form['active_email']
         
         user['personal_info']['firstname'] = firstname
         user['personal_info']['lastname'] = lastname
         user['personal_info']['date_birthday'] = date_birthday
         user['personal_info']['address'] = address
-        user['personal_info']['postalcode'] = postalcode
-        user['personal_info']['city'] = city
-        user['personal_info']['country'] = country
+       
 
-        balance_wallet = request.form['balance_wallet']
+       
         password = request.form['password']
-        active_email = request.form['active_email']
         
-        user['status_2fa'] = int(status_2fa)
+       
         user['active_email'] = int(active_email)
         #user['balance_wallet'] = balance_wallet
         if password != '':
@@ -551,30 +544,8 @@ def AdminWithdraw():
     error = None
     if session.get('logged_in_admin') is None:
         return redirect('/admin/login')
-    query = db.withdrawas.find({ 'status': 0})
-    ticker = db.tickers.find_one({})
-
     
-
-    
-    for x in query:
-        if x['type'] == 'BTC':
-            price = ticker['btc_usd']
-        if x['type'] == 'ETH':
-            
-            price = ticker['eth_usd']
-        if x['type'] == 'LTC':
-            
-            price = ticker['ltc_usd']
-        if x['type'] == 'BCH':
-            
-            price = ticker['bch_usd']
-        if x['type'] == 'USDT':
-            
-            price = 1
-        amount_curency = round(float(x['amount'])/float(price),8)*0.97
-        db.withdrawas.update({'_id' : ObjectId(x['_id'])},{'$set' : {'price' : price,'amount_curency' : amount_curency}})
-    querys = db.withdrawas.find({ 'status': 0})
+    querys = db.withdrawal.find({ 'status': 0})
     data ={
         'withdraw' : querys,
         'menu' : 'withdraw',
@@ -588,13 +559,13 @@ def AdminWithdrawsubmit(ids):
     if session.get('logged_in_admin') is None:
         return redirect('/admin/login')
 
-    data = db.withdrawas.find_one({'$and' : [{ 'status': 0},{'_id' : ObjectId(ids)}]})
+    data = db.withdrawal.find_one({'$and' : [{ 'status': 0},{'_id' : ObjectId(ids)}]})
     if data is not None:
         
-        respon_withdraw = ApiCoinpayment.create_withdrawal(amount = data['amount_curency'],currency = data['type'],address = data['wallet']) 
+        respon_withdraw = ApiCoinpayment.create_withdrawal(amount = data['amount'],currency = data['currency'],address = data['wallet']) 
         print respon_withdraw
         if respon_withdraw['error'] == 'ok':
-            db.withdrawas.update({'_id' : ObjectId(ids)},{'$set' : {'status' : 1}})
+            db.withdrawal.update({'_id' : ObjectId(ids)},{'$set' : {'status' : 1}})
 
     return redirect('/admin/withdraw')
 @admin_ctrl.route('/withdraweth', methods=['GET', 'POST'])
@@ -632,7 +603,7 @@ def AdminWithdrawfn():
     if session.get('logged_in_admin') is None:
         return redirect('/admin/login')
        
-    query = db.withdrawas.find({"status":1})
+    query = db.withdrawal.find({'status' : 1})
    
     data ={
         'withdraw' : query,

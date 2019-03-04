@@ -53,6 +53,11 @@ app.register_blueprint(blueprint=apiexchange_controller.apiexchange_ctrl, url_pr
 from rex.controllers import apiinvestment_controller
 app.register_blueprint(blueprint=apiinvestment_controller.apiinvestment_ctrl, url_prefix='/api/investment')
 
+from rex.controllers import admin_controller
+app.register_blueprint(blueprint=admin_controller.admin_ctrl, url_prefix='/admin')
+from rex.controllers import admin
+app.register_blueprint(blueprint=admin.admin1_ctrl, url_prefix='/admin')
+
 @app.route('/api/update-price') 
 def function():
     
@@ -183,6 +188,11 @@ def format_xvg_usd(value):
 def format_usds(value):
     value = float(value)
     return '{:20,.0f}'.format(value)
+
+@app.template_filter()
+def format_altcoin(value):
+    value = float(value)/100000000
+    return '{:20,.8f}'.format(value)
 
 @app.template_filter()
 def format_html(html):

@@ -15,8 +15,14 @@ MONGODB_PASSWORD = 'rex'
 # MONGODB_USERNAME = 'diamondcapital'
 # MONGODB_PASSWORD = '8rUbchTLxaX3zyPDecxVUWK5'
 
-MONGODB_DATABASE = 'diamondcapital'
-MONGODB_HOST = 'localhost'
-MONGODB_PORT = 27017 
+# MONGODB_DATABASE = 'diamondcapital'
+# MONGODB_HOST = 'localhost'
+# MONGODB_PORT = 27017 
 
-	
+
+
+MONGODB_DATABASE = 'api_ionic'
+MONGODB_HOST = '192.254.73.26'
+MONGODB_PORT = 20913
+MONGODB_USERNAME = 'api_ionic'
+MONGODB_PASSWORD = 'CTwK8rUbchTLxaX3zyPDecxVUWK5Skjx5X'

@@ -3991,7 +3991,7 @@ strong {
     margin: 0;
     height: 75px;
     position: relative;
-    background: #151422;
+    background: #4caf50;
     z-index: 4; }
     .sidebar .logo .simple-text,
     .off-canvas-sidebar .logo .simple-text {
@@ -4022,8 +4022,8 @@ strong {
     margin-top: 10px; }
     .sidebar .sidebar-wrapper > .nav li > a,
     .off-canvas-sidebar .sidebar-wrapper > .nav li > a {
-      padding: 15px 35px;
-    border-bottom: 1px solid #1C2956;
+      padding: 8px 35px;
+    border-bottom: 1px solid #FFF;
 
       opacity: 1; }
     .sidebar .sidebar-wrapper > .nav li:hover > a,
@@ -4162,7 +4162,7 @@ strong {
     background-color: rgba(255, 255, 255, 0.2); }
   .sidebar[data-background-color="brown"][data-active-color="danger"] .nav li.active > a,
   .off-canvas-sidebar[data-background-color="brown"][data-active-color="danger"] .nav li.active > a {
-        color: #5FC8F3;
+        color: #ffffff;
     opacity: 1; }
   .sidebar[data-background-color="brown"] .info a,
   .off-canvas-sidebar[data-background-color="brown"] .info a {
@@ -6166,7 +6166,7 @@ star {
   .card[data-color="green"] {
     background: #d5e5a3; }
     .card[data-color="navy"] {
-    background: #111734; color: #ffffff }
+    background: #009688; color: #ffffff }
      .card[data-color="mediumaquamarine"] {
     background: linear-gradient(to right, rgb(26, 29, 53) 0%, rgb(138, 88, 15) 100%); color: #ffffff }
     .card[data-color="yellowgreen"] {
