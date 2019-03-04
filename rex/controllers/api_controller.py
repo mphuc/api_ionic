@@ -252,10 +252,10 @@ def active_code():
 
     time.sleep(1)
     dataDict = json.loads(request.data)
-    email = dataDict['email'].lower()
+    customer_id = dataDict['customer_id'].lower()
     code = dataDict['code'].lower()
     
-    check_email = db.User.find_one({'email': email})
+    check_email = db.User.find_one({'customer_id': customer_id})
     if check_email is not None:
       if check_email.code_active != code:
         return json.dumps({
@@ -263,7 +263,7 @@ def active_code():
             'message': 'The code you entered is incorrect. Please try again.' 
         })
       else:
-        db.users.update({"email": email}, { "$set": { "active_email":1} })
+        db.users.update({"customer_id": customer_id}, { "$set": { "active_email":1} })
         return json.dumps({
             'status': 'complete', 
             'customer_id' : check_email['customer_id'],
