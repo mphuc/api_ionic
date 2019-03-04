@@ -82,16 +82,22 @@ def register():
       })
     else:
       customer_id = create_account(email,password,p_node)
-      #sendmail forgot password
+
       return json.dumps({
           'status': 'complete', 
           'customer_id' : customer_id,
           'message': 'Account successfully created' 
       })
-
+# @api_ctrl.route('/testmail', methods=['GET', 'POST'])
+# def testmail():
+#     sendmail_forgot_password('trungdoanict@gmail.com','1313123')
+#     return json.dumps({
+#         'status': 'complete' 
+        
+#     })
 @api_ctrl.route('/login', methods=['GET', 'POST'])
 def login():
-   
+    
     dataDict = json.loads(request.data)
     email = dataDict['email'].lower()
     password = dataDict['password'].lower()
@@ -207,6 +213,10 @@ def forgot_password():
     else:
         if int (user['active_email']) == 1:
           #sendmail forgot password 
+          password = id_generator(6)
+          password_new = set_password(password)
+          db.users.update({ "_id" : ObjectId(user['_id']) }, { '$set': {'password': password_new } })
+          sendmail_forgot_password(email,password) 
           return json.dumps({
             'status': 'complete', 
             'message': 'Forgot Password successfully' 
@@ -237,6 +247,8 @@ def resend_code():
           # print code_active
           # db.users.update({"customer_id": customer_id}, { "$set": { "code_active":code_active} })
           #sendmail Resend Code user['code_active']
+
+          send_mail_register(user['code_active'],user['email'])
           return json.dumps({
             'status': 'complete', 
             'message': 'Resend Code successfully' 
@@ -453,61 +465,40 @@ def create_account(email,password,p_node):
       } 
     }
     customer = db.users.insert(datas)
+    send_mail_register(code_active,email)
     return customer_id
 
-def send_mail_register(email,usernames,link_active):
-    html = """\
-        <div style="font-family:Arial,sans-serif;background-color:#f9f9f9;color:#424242;text-align:center">
-       <div class="adM">
-       </div>
-       <table style="table-layout:fixed;width:90%;max-width:600px;margin:0 auto;background-color:#f9f9f9">
-          <tbody>
-             <tr>
-                <td style="padding:20px 10px 10px 0px;text-align:left">
-                   <a href="https://worldtrader.info" title="World Trade" target="_blank" >
-                   <img src="https://worldtrader.info/static/home/images/logo/logo.png" alt="World Trade" class="CToWUd" style=" width: 200px; ">
-                   </a>
-                </td>
-                <td style="padding:0px 0px 0px 10px;text-align:right">
-                </td>
-             </tr>
-          </tbody>
-       </table>
-    </div>
-    <div style="font-family:Arial,sans-serif;background-color:#f9f9f9;color:#424242;text-align:center">
-       <table style="table-layout:fixed;width:90%;max-width:600px;margin:0 auto;background:#fff;font-size:14px;border:2px solid #e8e8e8;text-align:left;table-layout:fixed">
-          <tbody>
-             <tr>
-                <td style="padding:30px 30px 10px 30px;line-height:1.8">Dear <b>"""+str(usernames)+"""</b>,</td>
-             </tr>
-             <tr>
-                <td style="padding:10px 30px;line-height:1.8">Thank you for registering on the <a href="https://worldtrader.info/" target="_blank">World Trade</a>.</td>
-             </tr>
-             <tr>
-                <td style="padding:10px 30px;line-height:1.8">Your World Trade verification code is: <b>"""+str(link_active)+"""</b></td>
-             </tr>
 
-             <tr>
-                <td style="border-bottom:3px solid #efefef;width:90%;display:block;margin:0 auto;padding-top:30px"></td>
-             </tr>
-             <tr>
-                <td style="padding:30px 30px 30px 30px;line-height:1.3">Best regards,<br> <a href="https://worldtrader.info/" target="_blank" >World Trade</a></td>
-             </tr>
-          </tbody>
-       </table>
-    </div>
-    <div style="font-family:Arial,sans-serif;background-color:#f9f9f9;color:#424242;text-align:center;padding-bottom:10px;     height: 50px;">
-   
-</div>
+def send_mail_register(code_active,email):
+    html = """ 
+      <div style="width: 100%; "><div style="background: #2E6F9C; height: 150px;text-align: center;"><img src="https://i.ibb.co/tH5J6C2/logo.png" width="120px;" style="margin-top: 30px;" /></div><br><br>
+      Thank you for registering with Asipay. Please enter the code to activate the account.<br><br>
+      Your code is: <b>"""+str(code_active)+"""</b>
+      <br><br><br>Regards,<br>Asipay Account Services<div class="yj6qo"></div><div class="adL"><br><br><br></div></div>
     """
-
     return requests.post(
-      "https://api.mailgun.net/v3/worldtrader.info/messages",
-      auth=("api", "key-4cba65a7b1a835ac14b7949d5795236a"),
-      data={"from": "World Trade <no-reply@worldtrader.info>",
+      "https://api.mailgun.net/v3/diamondcapital.co/messages",
+      auth=("api", "key-cade8d5a3d4f7fcc9a15562aaec55034"),
+      data={"from": "Asipay <info@diamondcapital.co>",
         "to": ["", email],
         "subject": "Account registration successful",
-        "html": html})
-
+        "html": html}) 
+    return True
 
    
+def sendmail_forgot_password(email,password):
+    html = """ 
+      <div style="width: 100%; "><div style="background: #2E6F9C; height: 150px;text-align: center;"><img src="https://i.ibb.co/tH5J6C2/logo.png" width="120px;" style="margin-top: 30px;" /></div><br><br>
+      Thank you for registering with Asipay. Please enter a new password to login.<br><br>
+      Your password new is: <b>"""+str(password)+"""</b>
+      <br><br><br>Regards,<br>Asipay Account Services<div class="yj6qo"></div><div class="adL"><br><br><br></div></div>
+    """
+    return requests.post(
+      "https://api.mailgun.net/v3/diamondcapital.co/messages",
+      auth=("api", "key-cade8d5a3d4f7fcc9a15562aaec55034"),
+      data={"from": "Asipay <info@diamondcapital.co>",
+        "to": ["", email],
+        "subject": "New Password",
+        "html": html}) 
+    return True
+
