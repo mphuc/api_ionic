@@ -411,6 +411,7 @@ def create_account(email,password,p_node):
         'left': '',
         'right': '',
         'level': 0,
+        'league' : 0,
         'telephone' : '',
         'position': '',
         'creation': datetime.utcnow(),

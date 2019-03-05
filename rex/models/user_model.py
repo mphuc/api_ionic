@@ -20,6 +20,7 @@ class User(Document):
         'left' : unicode,
         'right' : unicode,
         'telephone' : float,
+        'league' : int,
         'p_node' : unicode,
         'password_transaction' : unicode,
         'btc_address' : unicode,

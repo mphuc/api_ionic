@@ -46,7 +46,8 @@ apiinvestment_ctrl = Blueprint('investment', __name__, static_folder='static', t
 
 @apiinvestment_ctrl.route('/testinvest', methods=['GET', 'POST'])
 def testinvest():
-    Systemcommission('32019433964','1','BTC')
+    Update_league_all_user()
+    #Systemcommission('32019433964','1','BTC')
     #Getlevel('32019433963')
     return json.dumps({
         'status': 'complete' 
@@ -460,7 +461,7 @@ def Systemcommission(customer_id,amount_receive,currency):
                         price_currency = ticker['usdt_usd']
                         string_currency = 'usdt_balance'
 
-                    commission = float(amount_receive)*float(percent_receve)*float(price_currency)/100
+                    commission = float(amount_receive)*float(percent_receve)*float(price_currency)*0.9/100
 
                     s_wallet = float(customers['s_wallet'])
                     new_s_wallet = float(s_wallet) + float(commission)
@@ -472,18 +473,68 @@ def Systemcommission(customer_id,amount_receive,currency):
 
                     balance_wallet = float(customers[string_currency])
 
-                    new_balance_wallet = float(balance_wallet) + (float(amount_receive)*float(percent_receve)*1000000)
+                    new_balance_wallet = float(balance_wallet) + (float(amount_receive)*float(percent_receve)*0.9*1000000)
                     new_balance_wallet = float(new_balance_wallet)
 
                     db.users.update({ "_id" : ObjectId(customers['_id']) }, { '$set': {string_currency : new_balance_wallet,'total_earn': new_total_earn, 's_wallet' :new_s_wallet } })
                     
                     detail = 'F'+str(i)+' '+ str(email_customer_receive) + ' receives ' + str(amount_receive)+ ' ' +str( currency) +' daily interest.'
-                    SaveHistory(customers['customer_id'],customers['email'],detail, float(amount_receive)*float(percent_receve)/100, currency, 'System commission')
+                    SaveHistory(customers['customer_id'],customers['email'],detail, float(amount_receive)*float(percent_receve)*0.9/100, currency, 'System commission')
         else:
             break
     return True
 
-#def Leadership_commission(customer_id,amount_receive,currency):
+# def Leadership_commission(customer_id,amount_receive,currency):
+#     customers = db.users.find_one({"customer_id" : customer_id })
+#     email_customer_receive = customers['email']
+#     ticker = db.tickers.find_one({})
+
+
+def Update_league_all_user():
+    db.users.update({ }, { '$set': { "league": 0 }},multi=True)
+    #League 1
+    customers = db.users.find({ 'level': { '$gt': 0 } })
+    for x in customers:
+        customers_child1 = db.users.find({'$and' :[{ 'level': { '$gt': 5 } },{'p_node' : x['customer_id']}]} ).count()
+        if int(customers_child1) >= 2  and float(x['total_node']) >= 100000:
+            db.users.update({ "customer_id" : x['customer_id'] }, { '$set': { "league": 1 }})
+
+    #League 2
+    customers2 = db.users.find({ 'level': { '$gt': 0 } })
+    for y in customers2:
+        customers_child2 = db.users.find({'$and' :[{ 'league': { '$gt': 0 } },{'p_node' : y['customer_id']}]} ).count()
+        if int(customers_child2) >= 2:
+            db.users.update({ "customer_id" : y['customer_id'] }, { '$set': { "league": 2 }})
+
+    #League 3
+    customers3 = db.users.find({ 'level': { '$gt': 0 } })
+    for z in customers3:
+        customers_child3 = db.users.find({'$and' :[{ 'league': { '$gt': 1 } },{'p_node' : z['customer_id']}]} ).count()
+        if int(customers_child3) >= 2:
+            db.users.update({ "customer_id" : z['customer_id'] }, { '$set': { "league": 3 }})
+
+    #League 4
+    customers4 = db.users.find({ 'level': { '$gt': 0 } })
+    for a in customers4:
+        customers_child4 = db.users.find({'$and' :[{ 'league': { '$gt': 2 } },{'p_node' : a['customer_id']}]} ).count()
+        if int(customers_child4) >= 2:
+            db.users.update({ "customer_id" : a['customer_id'] }, { '$set': { "league": 4 }})
+
+    #League 5
+    customers5 = db.users.find({ 'level': { '$gt': 0 } })
+    for b in customers5:
+        customers_child5 = db.users.find({'$and' :[{ 'league': { '$gt': 3 } },{'p_node' : b['customer_id']}]} ).count()
+        if int(customers_child5) >= 2:
+            db.users.update({ "customer_id" : b['customer_id'] }, { '$set': { "league": 5 }})
+
+    #League 6
+    customers6 = db.users.find({ 'level': { '$gt': 0 } })
+    for c in customers6:
+        customers_child6 = db.users.find({'$and' :[{ 'league': { '$gt': 4 } },{'p_node' : c['customer_id']}]} ).count()
+        if int(customers_child6) >= 2:
+            db.users.update({ "customer_id" : c['customer_id'] }, { '$set': { "league": 6 }})
+
+    return True
 
 def Getlevel(customer_id):
     count_f1 = db.users.find({"p_node" : customer_id }).count()
