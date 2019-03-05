@@ -114,6 +114,19 @@ def active_package():
         }
         db.investments.insert(data_investment)
 
+        #save lich su
+        data_dialing = {
+            'customer_id' : customer_id,
+            'username' : user['email'],
+            'package': float(amount),
+            'status' : 0,
+            'date_added' : datetime.utcnow(),
+            'amount_coin' : 0,
+            'currency' : currency
+        }
+        db.dialings.insert(data_dialing)
+
+
         FnRefferalProgram(customer_id, amount, currency)
 
         TotalnodeAmount(customer_id, amount,currency)
@@ -282,7 +295,7 @@ def withdraw_submit():
 
 def FnRefferalProgram(customer_id, amount_invest, currency):
     customers = db.users.find_one({"customer_id" : customer_id })
-    if customers['p_node'] != '0' or customers['p_node'] != '':
+    if customers['p_node'] != '':
         customers_pnode = db.users.find_one({"customer_id" : customers['p_node'] })
 
         if float(customers_pnode['investment'] > 0):
@@ -386,7 +399,7 @@ def Systemcommission(customer_id,amount_receive,currency):
     i = 0
     while i < 12:
         i += 1 
-        if customers['p_node'] != '0' or customers['p_node'] != '':
+        if customers['p_node'] != '':
             customers = db.users.find_one({"customer_id" : customers['p_node'] })
             if customers is None:
                 return True
@@ -503,8 +516,27 @@ def SaveHistory(uid, username,detail, amount, currency,types):
     db.historys.insert(data_history)
     return True
 
-def TotalnodeAmount(user_id, amount_invest):
+def TotalnodeAmount(user_id, amount_invest,currency):
+    ticker = db.tickers.find_one({})
     customer_ml = db.users.find_one({"customer_id" : user_id })
+    if currency == 'BTC': 
+        price_currency = ticker['btc_usd']
+        string_currency = 'btc_balance'
+    if currency == 'ETH':
+        price_currency = ticker['eth_usd']
+        string_currency = 'eth_balance'
+    if currency == 'LTC':
+        price_currency = ticker['ltc_usd']
+        string_currency = 'ltc_balance'
+    if currency == 'XRP':
+        price_currency = ticker['xrp_usd']
+        string_currency = 'xrp_balance'
+    if currency == 'USDT':
+        price_currency = ticker['usdt_usd']
+        string_currency = 'usdt_balance'
+
+    amount_invest = float(amount_invest)*float(price_currency)
+
     if customer_ml['p_node'] != '':
         while (True):
             customer_ml_p_node = db.users.find_one({"customer_id" : customer_ml['p_node'] })

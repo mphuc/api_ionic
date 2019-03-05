@@ -260,6 +260,73 @@ def get_history_transaction():
       })
     return json.dumps(array)
 
+@apiexchange_ctrl.route('/get-history-dialing', methods=['GET', 'POST'])
+def get_history_dialing():
+
+    dataDict = json.loads(request.data)
+    customer_id = dataDict['customer_id']
+    start = dataDict['start']
+    limit = dataDict['limit']
+    
+    history = db.dialings.find({'$and' : [{'customer_id': customer_id}]}).sort([("date_added", -1)]).limit(limit).skip(start)
+    #.sort("date_added", -1)
+
+    array = []
+    
+    for item in history:
+      array.append({
+        "username" : item['username'],
+        "package" : item['package'],
+        "currency" : item['currency'],
+        "status" : item['status'],
+        "amount_coin" : item['amount_coin'],
+        "date_added" : (item['date_added']).strftime('%H:%M %d-%m-%Y')
+      })
+    return json.dumps(array,)
+
+@apiexchange_ctrl.route('/get-number-dialing', methods=['GET', 'POST'])
+def get_number_dialing():
+
+    dataDict = json.loads(request.data)
+    customer_id = dataDict['customer_id']
+    
+    history = db.dialings.find({'$and' : [{'customer_id': customer_id}]}).sort([("date_added", -1)])
+    #.sort("date_added", -1)
+
+    array = []
+    number_dialing = 0
+    for item in history:
+      if int(item['status']) == 0:
+        number_dialing = number_dialing + 1
+      
+    return json.dumps({
+      'number_dialing' : number_dialing
+    })
+
+@apiexchange_ctrl.route('/update-number-dialing', methods=['GET', 'POST'])
+def update_number_dialing():
+
+    dataDict = json.loads(request.data)
+    customer_id = dataDict['customer_id']
+    number_random = dataDict['number_random']
+
+    history = db.dialings.find_one({'$and' : [{'customer_id': customer_id},{'status' : 0}]})
+    #.sort("date_added", -1)
+    if history is not None:
+
+      db.dialings.update({'_id': ObjectId(history['_id'])},{'$set' : {'amount_coin' : number_random,'status' :1}})
+      customer = db.users.find_one({'customer_id': customer_id})
+
+      coin_balance = float(customer['coin_balance'])
+      new_coin_balance = float(coin_balance) + (float(number_random)*100000000)
+      new_coin_balance = float(new_coin_balance)
+      db.users.update({ "_id" : ObjectId(customer['_id']) }, { '$set': {'coin_balance' : new_coin_balance } })
+            
+    return json.dumps({
+      'status' : 'complete'
+    })
+
+
 @apiexchange_ctrl.route('/get-history-profit', methods=['GET', 'POST'])
 def get_history_profit():
 
