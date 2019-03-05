@@ -503,3 +503,20 @@ def sendmail_forgot_password(email,password):
         "html": html}) 
     return True
 
+
+
+@api_ctrl.route('/auto-tickers', methods=['GET', 'POST'])
+def auto_tickers():
+    url = 'https://min-api.cryptocompare.com/data/price?fsym=USD&tsyms=BTC,ETH,LTC,XRP'
+    r = requests.get(url)
+    response_dict = r.json()
+
+     
+    data_ticker = db.tickers.find_one({})
+    data_ticker['btc_usd'] = round(1/float(response_dict['BTC']),2)
+    data_ticker['xrp_usd'] = round(1/float(response_dict['XRP']),2)
+    data_ticker['ltc_usd'] = round(1/float(response_dict['LTC']),2)
+    data_ticker['eth_usd'] = round(1/float(response_dict['ETH']),2)
+   
+    db.tickers.save(data_ticker)
+    return json.dumps({'status': 'success'})
