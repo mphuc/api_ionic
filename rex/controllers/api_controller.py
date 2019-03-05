@@ -178,6 +178,7 @@ def update_infomation():
         user['personal_info']['date_birthday'] = birth_day
         user['personal_info']['address'] = address
         user['telephone'] = telephone
+        user['verification'] = 1
         db.users.save(user)
         return json.dumps({
           'status': 'complete', 
@@ -339,6 +340,7 @@ def upload_img_passport_fontside(customer_id):
 
     user = db.users.find_one({'customer_id': customer_id})
     user['personal_info']['img_passport_fontside'] = url_img_save
+    user['verification'] = 1
     db.users.save(user)
     return json.dumps({
         'status': 'complete'
@@ -365,6 +367,7 @@ def upload_img_passport_backside(customer_id):
 
     user = db.users.find_one({'customer_id': customer_id})
     user['personal_info']['img_passport_backside'] = url_img_save
+    user['verification'] = 1
     db.users.save(user)
     return json.dumps({
         'status': 'complete'
@@ -391,6 +394,7 @@ def upload_img_address(customer_id):
 
     user = db.users.find_one({'customer_id': customer_id})
     user['personal_info']['img_address'] = url_img_save
+    user['verification'] = 1
     db.users.save(user)
     return json.dumps({
         'status': 'complete'

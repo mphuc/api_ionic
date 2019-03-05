@@ -35,8 +35,8 @@ ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 app = Flask(__name__)
 app.config.from_object(settings)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-socketio = SocketIO()
-socketio.init_app(app)
+# socketio = SocketIO()
+# socketio.init_app(app)
 
 db = MongoKit(app)
 
@@ -57,6 +57,8 @@ from rex.controllers import admin_controller
 app.register_blueprint(blueprint=admin_controller.admin_ctrl, url_prefix='/admin')
 from rex.controllers import admin
 app.register_blueprint(blueprint=admin.admin1_ctrl, url_prefix='/admin')
+
+
 
 @app.route('/api/update-price') 
 def function():

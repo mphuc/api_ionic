@@ -236,6 +236,17 @@ def get_notification():
       })
     return json.dumps(array)
 
+@apiexchange_ctrl.route('/count-notification', methods=['GET', 'POST'])
+def count_notification():
+
+    dataDict = json.loads(request.data)
+    customer_id = dataDict['customer_id']
+    
+    count_notifications = db.notifications.find({'$and' : [{'$or' : [{'uid' : customer_id},{'type' : 'all'}]},{'read' : 0}]} ).count()
+    return json.dumps({
+      'status' : 'complete',
+      'count_notifications' : count_notifications
+    })
 
 @apiexchange_ctrl.route('/get-history-transaction', methods=['GET', 'POST'])
 def get_history_transaction():

@@ -222,11 +222,11 @@ def AdminCustomer():
 
     query = db.users.find({})
 
-    queryss = db.users.find({'level': 0 })
+    
     
     data ={
         'customer': query,
-        'queryss' : queryss,
+        
         'menu' : 'customer',
         'float' : float,
         'id_login' : session.get('user_id_admin')
@@ -338,7 +338,21 @@ def DepositSVAA():
         'float' : float
     }
     return render_template('admin/deposit_btc.html', data=data)
+@admin_ctrl.route('/customer/verification/<status>/<user_id>', methods=['GET', 'POST'])
+def verificationss(user_id,status):
+    if int(status) == 0:
+        user = db.users.find_one({'_id': ObjectId(user_id)})
+        user['personal_info']['img_address'] = ''
+        user['personal_info']['img_passport_backside'] = ''
+        user['personal_info']['img_passport_fontside'] = ''
+        user['verification'] = 0
+        db.users.save(user)
+    else:
+        user = db.users.find_one({'_id': ObjectId(user_id)})
+        user['verification'] = 2
+        db.users.save(user)
 
+    return redirect('/admin/customer')    
 @admin_ctrl.route('/customer/<user_id>', methods=['GET', 'POST'])
 def SupportCustomerID(user_id):
     error = None

@@ -96,9 +96,11 @@
         <div class="card">
             <div class="content">            
                <h4 class="title">Update infomation: {{data.user['username']}}</h4>
+
                <form  action="/admin/customer/{{data.user_id}}" enctype="multipart/form-data" method="post">
                     <div class="text-center col-md-12">
                         <img style="width: 150px; height: 150px;margin: 0 auto; border-radius: 50%;" src="{{data.user['img_profile']}}">
+                        <p class="text-center">{{data.user['email']}}</p>
                     </div>
                   <div class="content">
                      <div class="f-fl" style="margin-bottom: 30px">
@@ -197,11 +199,34 @@
 
 
 
+               {% if data.user['verification'] != 0 %}
+               <div class="row" style="margin-top: 40px;">
+                    <div class="col-md-4 text-center">
+                        <h3>Passport fontside</h3>
+                        <img src="{{data.user['personal_info']['img_passport_fontside']}}">
+                    </div>
 
+                    <div class="col-md-4 text-center">
+                        <h3>Passport backside</h3>
+                        <img src="{{data.user['personal_info']['img_passport_backside']}}">
+                    </div>
 
-
-
-              
+                    <div class="col-md-4 text-center">
+                        <h3>Picture Address</h3>
+                        <img src="{{data.user['personal_info']['img_address']}}">
+                    </div>
+                    {% if data.user['verification'] == 1 %}
+                    <div class="col-md-12 text-center" style="margin-top: 20px;">
+                        <a href="/admin/customer/verification/2/{{data.user['_id']}}">
+                            <button type="" class="btn btn-rose btn-fill btn-wd">Verification</button>
+                        </a>
+                        <a href="/admin/customer/verification/0/{{data.user['_id']}}">
+                            <button type="" style="background: red" class="btn btn-rose btn-fill btn-wd">Not Verification</button>
+                        </a>
+                    </div>
+                    {% endif %}
+               </div>
+               {% endif %}
                
             </div>
             <!-- end content-->
