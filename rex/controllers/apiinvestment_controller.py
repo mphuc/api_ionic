@@ -478,7 +478,7 @@ def Systemcommission(customer_id,amount_receive,currency):
 
                     db.users.update({ "_id" : ObjectId(customers['_id']) }, { '$set': {string_currency : new_balance_wallet,'total_earn': new_total_earn, 's_wallet' :new_s_wallet } })
                     
-                    detail = 'F'+str(i)+' '+ str(email_customer_receive) + ' receives ' + str(amount_receive)+ ' ' +str( currency) +' daily interest.'
+                    detail = 'F'+str(i)+' '+ str(email_customer_receive) + ' received ' + str(amount_receive)+ ' ' +str( currency) +' daily interest.'
                     SaveHistory(customers['customer_id'],customers['email'],detail, float(amount_receive)*float(percent_receve)*0.9/100, currency, 'System commission')
         else:
             break
