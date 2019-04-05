@@ -977,18 +977,65 @@ def sendmail_code_verify_email(email,code):
         "html": html}) 
     return True
 
+
 @api_ctrl.route('/auto-tickers', methods=['GET', 'POST'])
 def auto_tickers():
-    url = 'https://min-api.cryptocompare.com/data/price?fsym=USD&tsyms=BTC,ETH,LTC,XRP'
-    r = requests.get(url)
+    url_api = "https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH,DASH,USDT,EOS,LTC,XRP&tsyms=USD&api_key=6ecd050c6cf3b457ebaaed0fc372f493aae2cb15a4888d19dbab8b85bfbbc4c4&api_key=6ecd050c6cf3b457ebaaed0fc372f493aae2cb15a4888d19dbab8b85bfbbc4c4"
+    r = requests.get(url_api)
     response_dict = r.json()
 
-     
+    btc_change = response_dict['RAW']['BTC']['USD']['CHANGEDAY']
+    btc_usd = response_dict['RAW']['BTC']['USD']['PRICE']
+
+    eth_change = response_dict['RAW']['ETH']['USD']['CHANGEDAY']
+    eth_usd = response_dict['RAW']['ETH']['USD']['PRICE']
+
+    ltc_change = response_dict['RAW']['LTC']['USD']['CHANGEDAY']
+    ltc_usd = response_dict['RAW']['LTC']['USD']['PRICE']
+
+    xrp_change = response_dict['RAW']['XRP']['USD']['CHANGEDAY']
+    xrp_usd = response_dict['RAW']['XRP']['USD']['PRICE']
+
+    eos_change = response_dict['RAW']['EOS']['USD']['CHANGEDAY']
+    eos_usd = response_dict['RAW']['EOS']['USD']['PRICE']
+
+    dash_change = response_dict['RAW']['DASH']['USD']['CHANGEDAY']
+    dash_usd = response_dict['RAW']['DASH']['USD']['PRICE']
+
+    usdt_change = response_dict['RAW']['USDT']['USD']['CHANGEDAY']
+    usdt_usd = response_dict['RAW']['USDT']['USD']['PRICE']
+
+    
+
     data_ticker = db.tickers.find_one({})
-    data_ticker['btc_usd'] = round(1/float(response_dict['BTC']),2)
-    data_ticker['xrp_usd'] = round(1/float(response_dict['XRP']),2)
-    data_ticker['ltc_usd'] = round(1/float(response_dict['LTC']),2)
-    data_ticker['eth_usd'] = round(1/float(response_dict['ETH']),2)
+    data_ticker['btc_usd'] = round(float(btc_usd),2)
+    data_ticker['xrp_usd'] = round(float(xrp_usd),2)
+    data_ticker['ltc_usd'] = round(float(ltc_usd),2)
+    data_ticker['eth_usd'] = round(float(eth_usd),2)
+    data_ticker['usdt_usd'] = round(float(usdt_usd),2)
+    data_ticker['dash_usd'] = round(float(dash_usd),2)
+    data_ticker['eos_usd'] = round(float(eos_usd),2)
+
+
+    data_ticker['btc_change'] =  price_coin_abs(btc_change)
+
+    
+    data_ticker['eth_change'] = price_coin_abs(eth_change)
+
+    
+    data_ticker['ltc_change'] = price_coin_abs(ltc_change)
+
+    
+    data_ticker['dash_change'] = price_coin_abs(dash_change)
+
+    
+    data_ticker['eos_change'] = price_coin_abs(eos_change)
+
+    
+    data_ticker['xrp_change'] = price_coin_abs(xrp_change)
+
+    
+    data_ticker['usdt_change'] =  price_coin_abs(usdt_change)
    
     db.tickers.save(data_ticker)
     return json.dumps({'status': 'success'})

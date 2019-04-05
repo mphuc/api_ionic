@@ -362,102 +362,110 @@ def withdraw_currency():
     password_transaction = dataDict['password_transaction']
 
     user = db.User.find_one({'customer_id': customer_id})
+
     if user is not None:
-      ticker = db.tickers.find_one({})
-      if currency == 'BTC':
-        val_balance = user['balance']['bitcoin']['available']
-        price_atlcoin = ticker['btc_usd']
-        string_query = 'balance.bitcoin.available'
-      if currency == 'ETH':
-        val_balance = user['balance']['ethereum']['available']
-        price_atlcoin = ticker['eth_usd']
-        string_query = 'balance.ethereum.available'
-      if currency == 'LTC':
-        val_balance = user['balance']['litecoin']['available']
-        price_atlcoin = ticker['ltc_usd']
-        string_query = 'balance.litecoin.available'
-      if currency == 'XRP':
-        val_balance = user['balance']['ripple']['available']
-        price_atlcoin = ticker['xrp_usd']
-        string_query = 'balance.ripple.available'
-      if currency == 'USDT':
-        val_balance = user['balance']['tether']['available']
-        price_atlcoin = ticker['usdt_usd']
-        string_query = 'balance.tether.available'
-      if currency == 'DASH':
-        val_balance = user['balance']['dash']['available']
-        price_atlcoin = ticker['dash_usd']
-        string_query = 'balance.dash.available'
-      if currency == 'EOS':
-        val_balance = user['balance']['eos']['available']
-        price_atlcoin = ticker['eos_usd']
-        string_query = 'balance.eos.available'
-      if currency == 'ASIC':
-        val_balance = user['balance']['coin']['available']
-        price_atlcoin = ticker['coin_usd']
-        string_query = 'balance.coin.available'
+      if int(user['security']['email']['status']) == 1:
 
-      if (float(price_atlcoin) * float(amount)) > 50:
+        ticker = db.tickers.find_one({})
+        if currency == 'BTC':
+          val_balance = user['balance']['bitcoin']['available']
+          price_atlcoin = ticker['btc_usd']
+          string_query = 'balance.bitcoin.available'
+        if currency == 'ETH':
+          val_balance = user['balance']['ethereum']['available']
+          price_atlcoin = ticker['eth_usd']
+          string_query = 'balance.ethereum.available'
+        if currency == 'LTC':
+          val_balance = user['balance']['litecoin']['available']
+          price_atlcoin = ticker['ltc_usd']
+          string_query = 'balance.litecoin.available'
+        if currency == 'XRP':
+          val_balance = user['balance']['ripple']['available']
+          price_atlcoin = ticker['xrp_usd']
+          string_query = 'balance.ripple.available'
+        if currency == 'USDT':
+          val_balance = user['balance']['tether']['available']
+          price_atlcoin = ticker['usdt_usd']
+          string_query = 'balance.tether.available'
+        if currency == 'DASH':
+          val_balance = user['balance']['dash']['available']
+          price_atlcoin = ticker['dash_usd']
+          string_query = 'balance.dash.available'
+        if currency == 'EOS':
+          val_balance = user['balance']['eos']['available']
+          price_atlcoin = ticker['eos_usd']
+          string_query = 'balance.eos.available'
+        if currency == 'ASIC':
+          val_balance = user['balance']['coin']['available']
+          price_atlcoin = ticker['coin_usd']
+          string_query = 'balance.coin.available'
 
-          if check_password(user['password_transaction'], password_transaction) == True or 1==1:
+        if (float(price_atlcoin) * float(amount)) > 50:
 
-              if float(val_balance) >= float(amount)*100000000:
-                if float(user['balance']['coin']['available']) >= 100000:
+            if check_password(user['password_transaction'], password_transaction) == True or 1==1:
+
+                if float(val_balance) >= float(amount)*100000000:
+                  if float(user['balance']['coin']['available']) >= 100000:
 
 
-                  amount_usd = float(amount)*float(price_atlcoin)
-                  
-                  new_balance_sub = round(float(val_balance) - (float(amount)*100000000),8)
+                    amount_usd = float(amount)*float(price_atlcoin)
+                    
+                    new_balance_sub = round(float(val_balance) - (float(amount)*100000000),8)
 
-                  db.users.update({ "customer_id" : customer_id }, { '$set': { string_query: float(new_balance_sub) } })
-                  
-                  #save lich su
-                  data = {
-                    'user_id': user['_id'],
-                    'uid': user['customer_id'],
-                    'username': user['username'],
-                    'amount': float(amount),
-                    'type': 'withdraw',
-                    'txt_id': '',
-                    'date_added' : datetime.utcnow(),
-                    'status': 0,
-                    'address': address,
-                    'currency' : currency,
-                    'confirmations' : 0,
-                    'amount_usd': float(price_atlcoin) * float(amount),
-                    'price' : price_atlcoin,
-                  }
-                  db.wallets.insert(data)
-                  #fee
-                  userss = db.User.find_one({'customer_id': customer_id})
-                  new_coin_fee = round((float(userss['balance']['coin']['available']) - 100000),8)
-                  db.users.update({ "customer_id" : customer_id }, { '$set': { 'balance.coin.available' : new_coin_fee } })
-         
-                  return json.dumps({
-                      'status': 'complete', 
-                      'message': 'Withdraw successfully' 
-                  })
+                    db.users.update({ "customer_id" : customer_id }, { '$set': { string_query: float(new_balance_sub) } })
+                    
+                    #save lich su
+                    data = {
+                      'user_id': user['_id'],
+                      'uid': user['customer_id'],
+                      'username': user['username'],
+                      'amount': float(amount),
+                      'type': 'withdraw',
+                      'txt_id': '',
+                      'date_added' : datetime.utcnow(),
+                      'status': 0,
+                      'address': address,
+                      'currency' : currency,
+                      'confirmations' : 0,
+                      'amount_usd': float(price_atlcoin) * float(amount),
+                      'price' : price_atlcoin,
+                    }
+                    db.wallets.insert(data)
+                    #fee
+                    userss = db.User.find_one({'customer_id': customer_id})
+                    new_coin_fee = round((float(userss['balance']['coin']['available']) - 100000),8)
+                    db.users.update({ "customer_id" : customer_id }, { '$set': { 'balance.coin.available' : new_coin_fee } })
+           
+                    return json.dumps({
+                        'status': 'complete', 
+                        'message': 'Withdraw successfully' 
+                    })
+                  else:
+                    return json.dumps({
+                        'status': 'error',
+                        'message': 'You do not have enough 0.001 ASIC to make transaction fees.' 
+                    })
                 else:
                   return json.dumps({
                       'status': 'error',
-                      'message': 'You do not have enough 0.001 ASIC to make transaction fees' 
+                      'message': 'Your account balance is not enough.' 
                   })
-              else:
+            else:
                 return json.dumps({
-                    'status': 'error',
-                    'message': 'Your account balance is not enough' 
+                  'status': 'error', 
+                  'message': 'Wrong password transaction. Please try again.' 
                 })
-          else:
-              return json.dumps({
-                'status': 'error', 
-                'message': 'Wrong password transaction. Please try again' 
-              })
-      else:
-          return json.dumps({
-              'status': 'error',
-              'message': 'The withdrawal number must be greater than '+str(round(50/float(price_atlcoin),8))+' '+currency
-          })
+        else:
+            return json.dumps({
+                'status': 'error',
+                'message': 'The withdrawal number must be greater than '+str(round(50/float(price_atlcoin),8))+' '+currency
+            })
 
+      else:
+        return json.dumps({
+            'status': 'error',
+            'message': 'Your account has not been verify.' 
+        })
     else:
       return json.dumps({
           'status': 'error'
