@@ -297,7 +297,7 @@ def add_wallet_address():
     check_address = db.contacts.find_one({'$and' : [{'customer_id' : customer_id},{'address': address},{'currency': currency}]})
     if check_name is None:
         if check_address is None:
-            if check_password(customer['password_transaction'], password_transaction) == True or 1==1:
+            if check_password(customer['password_transaction'], password_transaction) == True:
 
                 data = {
                     'uid': customer['customer_id'],

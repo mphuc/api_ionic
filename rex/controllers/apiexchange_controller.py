@@ -66,147 +66,152 @@ def submit_exchange():
 
     user = db.User.find_one({'customer_id': customer_id})
 
+    if int(user['security']['email']['status']) == 1:
+      if check_password(user['password_transaction'], password_transaction) == True:
 
-    if check_password(user['password_transaction'], password_transaction) == True or 1==1:
+        if form == 'BTC':
+          val_balance = user['balance']['bitcoin']['available']
+        if form == 'ETH':
+          val_balance = user['balance']['ethereum']['available']
+        if form == 'LTC':
+          val_balance = user['balance']['litecoin']['available']
+        if form == 'XRP':
+          val_balance = user['balance']['ripple']['available']
+        if form == 'USDT':
+          val_balance = user['balance']['tether']['available']
+        if form == 'DASH':
+          val_balance = user['balance']['dash']['available']
+        if form == 'EOS':
+          val_balance = user['balance']['eos']['available']
+        if form == 'ASIC':
+          val_balance = user['balance']['coin']['available']
 
-      if form == 'BTC':
-        val_balance = user['balance']['bitcoin']['available']
-      if form == 'ETH':
-        val_balance = user['balance']['ethereum']['available']
-      if form == 'LTC':
-        val_balance = user['balance']['litecoin']['available']
-      if form == 'XRP':
-        val_balance = user['balance']['ripple']['available']
-      if form == 'USDT':
-        val_balance = user['balance']['tether']['available']
-      if form == 'DASH':
-        val_balance = user['balance']['dash']['available']
-      if form == 'EOS':
-        val_balance = user['balance']['eos']['available']
-      if form == 'ASIC':
-        val_balance = user['balance']['coin']['available']
+        if float(val_balance) >= float(amount)*100000000:
+          if float(user['balance']['coin']['available']) >= 100000:
+            ticker = db.tickers.find_one({})
 
-      if float(val_balance) >= float(amount)*100000000:
-        if float(user['balance']['coin']['available']) >= 100000:
-          ticker = db.tickers.find_one({})
+            if form == 'BTC': 
+              price_form = ticker['btc_usd']
+              string_from = 'balance.bitcoin.available'
+              balance_from = user['balance']['bitcoin']['available']
+            if form == 'ETH':
+              price_form = ticker['eth_usd']
+              string_from = 'balance.ethereum.available'
+              balance_from = user['balance']['ethereum']['available']
+            if form == 'LTC':
+              price_form = ticker['ltc_usd']
+              string_from = 'balance.litecoin.available'
+              balance_from = user['balance']['litecoin']['available']
+            if form == 'XRP':
+              price_form = ticker['xrp_usd']
+              string_from = 'balance.ripple.available'
+              balance_from = user['balance']['ripple']['available']
+            if form == 'USDT':
+              price_form = ticker['usdt_usd']
+              string_from = 'balance.tether.available'
+              balance_from = user['balance']['tether']['available']
+            if form == 'DASH':
+              price_form = ticker['dash_usd']
+              string_from = 'balance.dash.available'
+              balance_from = user['balance']['dash']['available']
+            if form == 'EOS':
+              price_form = ticker['eso_usd']
+              string_from = 'balance.eos.available'
+              balance_from = user['balance']['eos']['available']
+            if form == 'ASIC':
+              price_form = ticker['coin_usd']
+              string_from = 'balance.coin.available'
+              balance_from = user['balance']['coin']['available']
 
-          if form == 'BTC': 
-            price_form = ticker['btc_usd']
-            string_from = 'balance.bitcoin.available'
-            balance_from = user['balance']['bitcoin']['available']
-          if form == 'ETH':
-            price_form = ticker['eth_usd']
-            string_from = 'balance.ethereum.available'
-            balance_from = user['balance']['ethereum']['available']
-          if form == 'LTC':
-            price_form = ticker['ltc_usd']
-            string_from = 'balance.litecoin.available'
-            balance_from = user['balance']['litecoin']['available']
-          if form == 'XRP':
-            price_form = ticker['xrp_usd']
-            string_from = 'balance.ripple.available'
-            balance_from = user['balance']['ripple']['available']
-          if form == 'USDT':
-            price_form = ticker['usdt_usd']
-            string_from = 'balance.tether.available'
-            balance_from = user['balance']['tether']['available']
-          if form == 'DASH':
-            price_form = ticker['dash_usd']
-            string_from = 'balance.dash.available'
-            balance_from = user['balance']['dash']['available']
-          if form == 'EOS':
-            price_form = ticker['eso_usd']
-            string_from = 'balance.eos.available'
-            balance_from = user['balance']['eos']['available']
-          if form == 'ASIC':
-            price_form = ticker['coin_usd']
-            string_from = 'balance.coin.available'
-            balance_from = user['balance']['coin']['available']
+            amount_usd_form = float(amount)*float(price_form)
 
-          amount_usd_form = float(amount)*float(price_form)
+            if to == 'BTC': 
+              price_to = ticker['btc_usd']
+              string_to = 'balance.bitcoin.available'
+              balance_to = user['balance']['bitcoin']['available']
+            if to == 'ETH':
+              price_to = ticker['eth_usd']
+              string_to = 'balance.ethereum.available'
+              balance_to = user['balance']['ethereum']['available']
+            if to == 'LTC':
+              price_to = ticker['ltc_usd']
+              string_to = 'balance.litecoin.available'
+              balance_to = user['balance']['litecoin']['available']
+            if to == 'XRP':
+              price_to = ticker['xrp_usd']
+              string_to = 'balance.ripple.available'
+              balance_to = user['balance']['ripple']['available']
+            if to == 'USDT':
+              price_to = ticker['usdt_usd']
+              string_to = 'balance.tether.available'
+              balance_to = user['balance']['tether']['available']
+            if to == 'DASH':
+              price_to = ticker['dash_usd']
+              string_to = 'balance.dash.available'
+              balance_to = user['balance']['dash']['available']
+            if to == 'EOS':
+              price_to = ticker['eos_usd']
+              string_to = 'balance.eos.available'
+              balance_to = user['balance']['eos']['available']
+            if to == 'ASIC':
+              price_to = ticker['coin_usd']
+              string_to = 'balance.coin.available'
+              balance_to = user['balance']['coin']['available']
 
-          if to == 'BTC': 
-            price_to = ticker['btc_usd']
-            string_to = 'balance.bitcoin.available'
-            balance_to = user['balance']['bitcoin']['available']
-          if to == 'ETH':
-            price_to = ticker['eth_usd']
-            string_to = 'balance.ethereum.available'
-            balance_to = user['balance']['ethereum']['available']
-          if to == 'LTC':
-            price_to = ticker['ltc_usd']
-            string_to = 'balance.litecoin.available'
-            balance_to = user['balance']['litecoin']['available']
-          if to == 'XRP':
-            price_to = ticker['xrp_usd']
-            string_to = 'balance.ripple.available'
-            balance_to = user['balance']['ripple']['available']
-          if to == 'USDT':
-            price_to = ticker['usdt_usd']
-            string_to = 'balance.tether.available'
-            balance_to = user['balance']['tether']['available']
-          if to == 'DASH':
-            price_to = ticker['dash_usd']
-            string_to = 'balance.dash.available'
-            balance_to = user['balance']['dash']['available']
-          if to == 'EOS':
-            price_to = ticker['eos_usd']
-            string_to = 'balance.eos.available'
-            balance_to = user['balance']['eos']['available']
-          if to == 'ASIC':
-            price_to = ticker['coin_usd']
-            string_to = 'balance.coin.available'
-            balance_to = user['balance']['coin']['available']
+            balance_add = ((float(amount_usd_form)/float(price_to))*100000000)*0.9975
+            balance_sub = float(amount)*100000000
 
-          balance_add = ((float(amount_usd_form)/float(price_to))*100000000)*0.9975
-          balance_sub = float(amount)*100000000
+            new_balance_add = round((float(balance_add) + float(balance_to)),8)
+            new_balance_sub = round((float(balance_from) - float(balance_sub)),8)
 
-          new_balance_add = round((float(balance_add) + float(balance_to)),8)
-          new_balance_sub = round((float(balance_from) - float(balance_sub)),8)
+            new_coin_fee = round((float(user['balance']['coin']['available']) - 100000),8)
 
-          new_coin_fee = round((float(user['balance']['coin']['available']) - 100000),8)
+            db.users.update({ "customer_id" : customer_id }, { '$set': { string_from: float(new_balance_sub) ,string_to : float(new_balance_add) } })
+            
+            #save lich su
+            data_history = {
+                'uid':  customer_id,
+                'user_id': customer_id,
+                'username': user['email'],
+                'detail':  'exchange',
+                'amount_form': round(float(amount),8),
+                'amount_to' :  round((float(balance_add)/100000000),8),
+                'currency_from' :  form,
+                'currency_to' :  to,
+                'price_form' : price_form,
+                'price_to':  price_to,
+                'date_added' : datetime.utcnow()
+            }
+            db.exchanges.insert(data_history)
 
-          db.users.update({ "customer_id" : customer_id }, { '$set': { string_from: float(new_balance_sub) ,string_to : float(new_balance_add) } })
-          
-          #save lich su
-          data_history = {
-              'uid':  customer_id,
-              'user_id': customer_id,
-              'username': user['email'],
-              'detail':  'exchange',
-              'amount_form': round(float(amount),8),
-              'amount_to' :  round((float(balance_add)/100000000),8),
-              'currency_from' :  form,
-              'currency_to' :  to,
-              'price_form' : price_form,
-              'price_to':  price_to,
-              'date_added' : datetime.utcnow()
-          }
-          db.exchanges.insert(data_history)
-
-          #fee
-          userss = db.User.find_one({'customer_id': customer_id})
-          new_coin_fee = round((float(userss['balance']['coin']['available']) - 100000),8)
-          db.users.update({ "customer_id" : customer_id }, { '$set': { 'balance.coin.available' : new_coin_fee } })
-         
-          return json.dumps({
-              'status': 'complete', 
-              'message': 'Account successfully created' 
-          })
+            #fee
+            userss = db.User.find_one({'customer_id': customer_id})
+            new_coin_fee = round((float(userss['balance']['coin']['available']) - 100000),8)
+            db.users.update({ "customer_id" : customer_id }, { '$set': { 'balance.coin.available' : new_coin_fee } })
+           
+            return json.dumps({
+                'status': 'complete', 
+                'message': 'Account successfully created' 
+            })
+          else:
+            return json.dumps({
+                'status': 'error',
+                'message': 'You do not have enough 0.001 ASIC to make transaction fees' 
+            })
         else:
           return json.dumps({
-              'status': 'error',
-              'message': 'You do not have enough 0.001 ASIC to make transaction fees' 
+              'status': 'error', 
+              'message': 'Your '+str(form)+' balance is not enough to exchange.' 
           })
       else:
         return json.dumps({
-            'status': 'error', 
-            'message': 'Your '+str(form)+' balance is not enough to exchange.' 
+          'status': 'error', 
+          'message': 'Wrong password transaction. Please try again' 
         })
     else:
       return json.dumps({
         'status': 'error', 
-        'message': 'Wrong password transaction. Please try again' 
+        'message': 'Your account has not been verify.' 
       })
     
 @apiexchange_ctrl.route('/submit-support', methods=['GET', 'POST'])

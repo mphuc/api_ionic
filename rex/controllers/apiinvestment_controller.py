@@ -290,155 +290,160 @@ def submit_payment():
     password_transaction = dataDict['password_transaction']
 
     user = db.User.find_one({'customer_id': customer_id})
+    if int(user['security']['email']['status']) == 1:
+        if check_password(user['password_transaction'], password_transaction) == True:
 
-    if check_password(user['password_transaction'], password_transaction) == True or 1==1:
+            if user is not None:
+                ticker = db.tickers.find_one({})
+                if currency == 'BTC': 
+                    price_atlcoin = ticker['btc_usd']
+                    string_query = 'balance.bitcoin.available'
+                    string_query_address = 'balance.bitcoin.cryptoaddress'
+                    val_balance = user['balance']['bitcoin']['available']
+                if currency == 'ETH':
+                    price_atlcoin = ticker['eth_usd']
+                    string_query = 'balance.ethereum.available'
+                    val_balance = user['balance']['ethereum']['available']
+                    string_query_address = 'balance.ethereum.cryptoaddress'
+                if currency == 'LTC':
+                    price_atlcoin = ticker['ltc_usd']
+                    string_query = 'balance.litecoin.available'
+                    val_balance = user['balance']['litecoin']['available']
+                    string_query_address = 'balance.litecoin.cryptoaddress'
+                if currency == 'XRP':
+                    price_atlcoin = ticker['xrp_usd']
+                    string_query = 'balance.ripple.available'
+                    val_balance = user['balance']['ripple']['available']
+                    string_query_address = 'balance.ripple.cryptoaddress'
+                if currency == 'USDT':
+                    price_atlcoin = ticker['usdt_usd']
+                    string_query = 'balance.tether.available'
+                    val_balance = user['balance']['tether']['available']
+                    string_query_address = 'balance.tether.cryptoaddress'
+                if currency == 'DASH':
+                    price_atlcoin = ticker['dash_usd']
+                    string_query = 'balance.dash.available'
+                    val_balance = user['balance']['dash']['available']
+                    string_query_address = 'balance.dash.cryptoaddress'
+                if currency == 'EOS':
+                    price_atlcoin = ticker['eso_usd']
+                    string_query = 'balance.eos.available'
+                    val_balance = user['balance']['eos']['available']
+                    string_query_address = 'balance.eos.cryptoaddress'
+                if currency == 'ASIC':
+                    price_atlcoin = ticker['coin_usd']
+                    string_query = 'balance.coin.available'
+                    val_balance = user['balance']['coin']['available']
+                    string_query_address = 'balance.coin.cryptoaddress'
 
-        if user is not None:
-            ticker = db.tickers.find_one({})
-            if currency == 'BTC': 
-                price_atlcoin = ticker['btc_usd']
-                string_query = 'balance.bitcoin.available'
-                string_query_address = 'balance.bitcoin.cryptoaddress'
-                val_balance = user['balance']['bitcoin']['available']
-            if currency == 'ETH':
-                price_atlcoin = ticker['eth_usd']
-                string_query = 'balance.ethereum.available'
-                val_balance = user['balance']['ethereum']['available']
-                string_query_address = 'balance.ethereum.cryptoaddress'
-            if currency == 'LTC':
-                price_atlcoin = ticker['ltc_usd']
-                string_query = 'balance.litecoin.available'
-                val_balance = user['balance']['litecoin']['available']
-                string_query_address = 'balance.litecoin.cryptoaddress'
-            if currency == 'XRP':
-                price_atlcoin = ticker['xrp_usd']
-                string_query = 'balance.ripple.available'
-                val_balance = user['balance']['ripple']['available']
-                string_query_address = 'balance.ripple.cryptoaddress'
-            if currency == 'USDT':
-                price_atlcoin = ticker['usdt_usd']
-                string_query = 'balance.tether.available'
-                val_balance = user['balance']['tether']['available']
-                string_query_address = 'balance.tether.cryptoaddress'
-            if currency == 'DASH':
-                price_atlcoin = ticker['dash_usd']
-                string_query = 'balance.dash.available'
-                val_balance = user['balance']['dash']['available']
-                string_query_address = 'balance.dash.cryptoaddress'
-            if currency == 'EOS':
-                price_atlcoin = ticker['eso_usd']
-                string_query = 'balance.eos.available'
-                val_balance = user['balance']['eos']['available']
-                string_query_address = 'balance.eos.cryptoaddress'
-            if currency == 'ASIC':
-                price_atlcoin = ticker['coin_usd']
-                string_query = 'balance.coin.available'
-                val_balance = user['balance']['coin']['available']
-                string_query_address = 'balance.coin.cryptoaddress'
+                if float(val_balance) >= float(amount)*100000000:
+                        amount_usd = float(amount)*float(price_atlcoin)
 
-            if float(val_balance) >= float(amount)*100000000:
-                    amount_usd = float(amount)*float(price_atlcoin)
-
-                    user_receve = db.User.find_one({string_query_address: address})
-                    
-                    if user_receve is not None:
-
-
-                        new_balance_sub = round((float(val_balance) - float(amount)*100000000),8)
-                      
-                        db.users.update({ "customer_id" : customer_id }, { '$set': { string_query: float(new_balance_sub)} })
+                        user_receve = db.User.find_one({string_query_address: address})
                         
-                        if currency == 'BTC': 
-                            price_atlcoin = ticker['btc_usd']
-                            string_query = 'balance.bitcoin.available'
-                            val_balance_receve = user_receve['balance']['bitcoin']['available']
-                        if currency == 'ETH':
-                            price_atlcoin = ticker['eth_usd']
-                            string_query = 'balance.ethereum.available'
-                            val_balance_receve = user_receve['balance']['ethereum']['available']
-                        if currency == 'LTC':
-                            price_atlcoin = ticker['ltc_usd']
-                            string_query = 'balance.litecoin.available'
-                            val_balance_receve = user_receve['balance']['litecoin']['available']
-                        if currency == 'XRP':
-                            price_atlcoin = ticker['xrp_usd']
-                            string_query = 'balance.ripple.available'
-                            val_balance_receve = user_receve['balance']['ripple']['available']
-                        if currency == 'USDT':
-                            price_atlcoin = ticker['usdt_usd']
-                            string_query = 'balance.tether.available'
-                            val_balance_receve = user_receve['balance']['tether']['available']
-                        if currency == 'DASH':
-                            price_atlcoin = ticker['dash_usd']
-                            string_query = 'balance.dash.available'
-                            val_balance_receve = user_receve['balance']['dash']['available']
-                        if currency == 'EOS':
-                            price_atlcoin = ticker['eso_usd']
-                            string_query = 'balance.eos.available'
-                            val_balance_receve = user_receve['balance']['eos']['available']
-                        if currency == 'ASIC':
-                            price_atlcoin = ticker['coin_usd']
-                            string_query = 'balance.coin.available'
-                            val_balance_receve = user_receve['balance']['coin']['available']
+                        if user_receve is not None:
 
-                        new_balance_add = round((float(val_balance_receve) + float(amount)*100000000),8)
-                      
-                        db.users.update({ "customer_id" : user_receve['customer_id'] }, { '$set': { string_query: float(new_balance_add)} })
-                        
-                        #save lich su
-                        data_payment_sub = {
-                            'uid' : customer_id,
-                            'user_id': str(user['_id']),
-                            'username' : user['email'],
-                            'amount_usd' : float(amount_usd),
-                            'amount' : round(amount,8),
-                            'status' : 1,
-                            'date_added' : datetime.utcnow(),
-                            'address' : address,
-                            'currency' : currency,
-                            'types' : 'send'
-                        }
-                        db.payments.insert(data_payment_sub)
 
-                        data_payment_add = {
-                            'uid' : user_receve['customer_id'],
-                            'user_id': str(user_receve['_id']),
-                            'username' : user_receve['email'],
-                            'amount_usd' : float(amount_usd),
-                            'amount' : round(amount,8),
-                            'status' : 1,
-                            'date_added' : datetime.utcnow(),
-                            'address' : address,
-                            'currency' : currency,
-                            'types' : 'receive'
-                        }
-                        db.payments.insert(data_payment_add)
+                            new_balance_sub = round((float(val_balance) - float(amount)*100000000),8)
+                          
+                            db.users.update({ "customer_id" : customer_id }, { '$set': { string_query: float(new_balance_sub)} })
+                            
+                            if currency == 'BTC': 
+                                price_atlcoin = ticker['btc_usd']
+                                string_query = 'balance.bitcoin.available'
+                                val_balance_receve = user_receve['balance']['bitcoin']['available']
+                            if currency == 'ETH':
+                                price_atlcoin = ticker['eth_usd']
+                                string_query = 'balance.ethereum.available'
+                                val_balance_receve = user_receve['balance']['ethereum']['available']
+                            if currency == 'LTC':
+                                price_atlcoin = ticker['ltc_usd']
+                                string_query = 'balance.litecoin.available'
+                                val_balance_receve = user_receve['balance']['litecoin']['available']
+                            if currency == 'XRP':
+                                price_atlcoin = ticker['xrp_usd']
+                                string_query = 'balance.ripple.available'
+                                val_balance_receve = user_receve['balance']['ripple']['available']
+                            if currency == 'USDT':
+                                price_atlcoin = ticker['usdt_usd']
+                                string_query = 'balance.tether.available'
+                                val_balance_receve = user_receve['balance']['tether']['available']
+                            if currency == 'DASH':
+                                price_atlcoin = ticker['dash_usd']
+                                string_query = 'balance.dash.available'
+                                val_balance_receve = user_receve['balance']['dash']['available']
+                            if currency == 'EOS':
+                                price_atlcoin = ticker['eso_usd']
+                                string_query = 'balance.eos.available'
+                                val_balance_receve = user_receve['balance']['eos']['available']
+                            if currency == 'ASIC':
+                                price_atlcoin = ticker['coin_usd']
+                                string_query = 'balance.coin.available'
+                                val_balance_receve = user_receve['balance']['coin']['available']
 
-                        
-                        return json.dumps({
-                            'status': 'complete', 
-                            'message': 'Payment successfully' 
-                        })
-                    else:
-                        return json.dumps({
-                            'status': 'error',
-                            'message': 'Awrong payment information' 
-                        })
-               
+                            new_balance_add = round((float(val_balance_receve) + float(amount)*100000000),8)
+                          
+                            db.users.update({ "customer_id" : user_receve['customer_id'] }, { '$set': { string_query: float(new_balance_add)} })
+                            
+                            #save lich su
+                            data_payment_sub = {
+                                'uid' : customer_id,
+                                'user_id': str(user['_id']),
+                                'username' : user['email'],
+                                'amount_usd' : float(amount_usd),
+                                'amount' : round(amount,8),
+                                'status' : 1,
+                                'date_added' : datetime.utcnow(),
+                                'address' : address,
+                                'currency' : currency,
+                                'types' : 'send'
+                            }
+                            db.payments.insert(data_payment_sub)
+
+                            data_payment_add = {
+                                'uid' : user_receve['customer_id'],
+                                'user_id': str(user_receve['_id']),
+                                'username' : user_receve['email'],
+                                'amount_usd' : float(amount_usd),
+                                'amount' : round(amount,8),
+                                'status' : 1,
+                                'date_added' : datetime.utcnow(),
+                                'address' : address,
+                                'currency' : currency,
+                                'types' : 'receive'
+                            }
+                            db.payments.insert(data_payment_add)
+
+                            
+                            return json.dumps({
+                                'status': 'complete', 
+                                'message': 'Payment successfully' 
+                            })
+                        else:
+                            return json.dumps({
+                                'status': 'error',
+                                'message': 'Awrong payment information' 
+                            })
+                   
+                else:
+                    return json.dumps({
+                        'status': 'error',
+                        'message': 'Account balance is not enough to payment' 
+                    })
+
             else:
-                return json.dumps({
-                    'status': 'error',
-                    'message': 'Account balance is not enough to payment' 
-                })
-
+              return json.dumps({
+                  'status': 'error'
+              })
         else:
-          return json.dumps({
-              'status': 'error'
-          })
+            return json.dumps({
+                'status': 'error', 
+                'message': 'Wrong password transaction. Please try again' 
+            })
     else:
         return json.dumps({
             'status': 'error', 
-            'message': 'Wrong password transaction. Please try again' 
+            'message': 'Your account has not been verify.' 
         })
 
 @apiinvestment_ctrl.route('/get-history-payment', methods=['GET', 'POST'])
