@@ -720,7 +720,7 @@ def upload_img_profile(customer_id):
     SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
     
     upload     = request.files.get('file')
-    
+    print upload
     save_path = SITE_ROOT+'/../static/img/upload'.format(category='category')
     if not os.path.exists(save_path):
         os.makedirs(save_path)
