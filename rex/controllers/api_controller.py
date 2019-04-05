@@ -731,7 +731,7 @@ def upload_img_profile(customer_id):
     
     url_img_save = 'https://api.buy-sellpro.co/static/img/upload/'+name
     print url_img_save
-    db.users.update({ "customer_id" : customer_id }, { '$set': { "img_profile": url_img_save } })
+    db.users.update({ "customer_id" : customer_id }, { '$set': { "personal_info.img_profile": url_img_save } })
     return json.dumps({
         'status': 'complete', 
         'name_ifle' : url_img_save
