@@ -15,7 +15,7 @@ MONGODB_PASSWORD = 'rex'
 # MONGODB_USERNAME = 'diamondcapital'
 # MONGODB_PASSWORD = '8rUbchTLxaX3zyPDecxVUWK5'
 
-MONGODB_DATABASE = 'diamondcapital'
+MONGODB_DATABASE = 'plustoken'
 MONGODB_HOST = 'localhost'
 MONGODB_PORT = 27017 
 

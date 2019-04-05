@@ -31,6 +31,7 @@ import sys
 
 import requests
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+
 sys.setrecursionlimit(10000)
 digits58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
@@ -42,6 +43,78 @@ ApiCoinpayment = CoinPaymentsAPI(public_key=Config().public_key,
 __author__ = 'asdasd'
 
 apiexchange_ctrl = Blueprint('exchange', __name__, static_folder='static', template_folder='templates')
+def check_password(pw_hash, password):
+        return check_password_hash(pw_hash, password)
+
+def price_coin_abs(amount):
+    if float(amount) > 0:
+        amount = round(float(amount),2)
+    else:
+        amount = '-'+str(round(abs(amount),2))
+    return amount
+
+@apiexchange_ctrl.route('/test', methods=['GET', 'POST'])
+def test():
+    print "123131"
+    url_api = "https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH,DASH,USDT,EOS,LTC,XRP&tsyms=USD&api_key=6ecd050c6cf3b457ebaaed0fc372f493aae2cb15a4888d19dbab8b85bfbbc4c4&api_key=6ecd050c6cf3b457ebaaed0fc372f493aae2cb15a4888d19dbab8b85bfbbc4c4"
+    r = requests.get(url_api)
+    response_dict = r.json()
+
+    btc_change = response_dict['RAW']['BTC']['USD']['CHANGEDAY']
+    btc_usd = response_dict['RAW']['BTC']['USD']['PRICE']
+
+    eth_change = response_dict['RAW']['ETH']['USD']['CHANGEDAY']
+    eth_usd = response_dict['RAW']['ETH']['USD']['PRICE']
+
+    ltc_change = response_dict['RAW']['LTC']['USD']['CHANGEDAY']
+    ltc_usd = response_dict['RAW']['LTC']['USD']['PRICE']
+
+    xrp_change = response_dict['RAW']['XRP']['USD']['CHANGEDAY']
+    xrp_usd = response_dict['RAW']['XRP']['USD']['PRICE']
+
+    eos_change = response_dict['RAW']['EOS']['USD']['CHANGEDAY']
+    eos_usd = response_dict['RAW']['EOS']['USD']['PRICE']
+
+    dash_change = response_dict['RAW']['DASH']['USD']['CHANGEDAY']
+    dash_usd = response_dict['RAW']['DASH']['USD']['PRICE']
+
+    usdt_change = response_dict['RAW']['USDT']['USD']['CHANGEDAY']
+    usdt_usd = response_dict['RAW']['USDT']['USD']['PRICE']
+
+    
+
+    data_ticker = db.tickers.find_one({})
+    data_ticker['btc_usd'] = round(float(btc_usd),2)
+    data_ticker['xrp_usd'] = round(float(xrp_usd),2)
+    data_ticker['ltc_usd'] = round(float(ltc_usd),2)
+    data_ticker['eth_usd'] = round(float(eth_usd),2)
+    data_ticker['usdt_usd'] = round(float(usdt_usd),2)
+    data_ticker['dash_usd'] = round(float(dash_usd),2)
+    data_ticker['eos_usd'] = round(float(eos_usd),2)
+
+
+    data_ticker['btc_change'] =  price_coin_abs(btc_change)
+
+    
+    data_ticker['eth_change'] = price_coin_abs(eth_change)
+
+    
+    data_ticker['ltc_change'] = price_coin_abs(ltc_change)
+
+    
+    data_ticker['dash_change'] = price_coin_abs(dash_change)
+
+    
+    data_ticker['eos_change'] = price_coin_abs(eos_change)
+
+    
+    data_ticker['xrp_change'] = price_coin_abs(xrp_change)
+
+    
+    data_ticker['usdt_change'] =  price_coin_abs(usdt_change)
+   
+    db.tickers.save(data_ticker)
+    return json.dumps({'status': 'success'})
 
 @apiexchange_ctrl.route('/submit', methods=['GET', 'POST'])
 def submit_exchange():
@@ -50,98 +123,151 @@ def submit_exchange():
     form = dataDict['form']
     to = dataDict['to']
     amount = dataDict['amount']
-    
+    password_transaction = dataDict['password_transaction']
+
     user = db.User.find_one({'customer_id': customer_id})
-    if form == 'BTC':
-      val_balance = user['btc_balance']
-    if form == 'ETH':
-      val_balance = user['eth_balance']
-    if form == 'LTC':
-      val_balance = user['ltc_balance']
-    if form == 'XRP':
-      val_balance = user['xrp_balance']
-    if form == 'USDT':
-      val_balance = user['usdt_balance']
-    if form == 'STO':
-      val_balance = user['coin_balance']
 
-    if float(val_balance) >= float(amount)*100000000 + float(amount)*100000000*0.0025:
 
-      ticker = db.tickers.find_one({})
+    if check_password(user['password_transaction'], password_transaction) == True or 1==1:
 
-      if form == 'BTC': 
-        price_form = ticker['btc_usd']
-        string_from = 'btc_balance'
+      if form == 'BTC':
+        val_balance = user['balance']['bitcoin']['available']
       if form == 'ETH':
-        price_form = ticker['eth_usd']
-        string_from = 'eth_balance'
+        val_balance = user['balance']['ethereum']['available']
       if form == 'LTC':
-        price_form = ticker['ltc_usd']
-        string_from = 'ltc_balance'
+        val_balance = user['balance']['litecoin']['available']
       if form == 'XRP':
-        price_form = ticker['xrp_usd']
-        string_from = 'xrp_balance'
+        val_balance = user['balance']['ripple']['available']
       if form == 'USDT':
-        price_form = ticker['usdt_usd']
-        string_from = 'usdt_balance'
-      if form == 'STO':
-        price_form = ticker['coin_usd']
-        string_from = 'coin_balance'
+        val_balance = user['balance']['tether']['available']
+      if form == 'DASH':
+        val_balance = user['balance']['dash']['available']
+      if form == 'EOS':
+        val_balance = user['balance']['eos']['available']
+      if form == 'ASIC':
+        val_balance = user['balance']['coin']['available']
 
-      amount_usd_form = float(amount)*float(price_form)
+      if float(val_balance) >= float(amount)*100000000:
+        if float(user['balance']['coin']['available']) >= 100000:
+          ticker = db.tickers.find_one({})
 
-      if to == 'BTC': 
-        price_to = ticker['btc_usd']
-        string_to = 'btc_balance'
-      if to == 'ETH':
-        price_to = ticker['eth_usd']
-        string_to = 'eth_balance'
-      if to == 'LTC':
-        price_to = ticker['ltc_usd']
-        string_to = 'ltc_balance'
-      if to == 'XRP':
-        price_to = ticker['xrp_usd']
-        string_to = 'xrp_balance'
-      if to == 'USDT':
-        price_to = ticker['usdt_usd']
-        string_to = 'usdt_balance'
-      if to == 'STO':
-        price_to = ticker['coin_usd']
-        string_to = 'coin_balance'
+          if form == 'BTC': 
+            price_form = ticker['btc_usd']
+            string_from = 'balance.bitcoin.available'
+            balance_from = user['balance']['bitcoin']['available']
+          if form == 'ETH':
+            price_form = ticker['eth_usd']
+            string_from = 'balance.ethereum.available'
+            balance_from = user['balance']['ethereum']['available']
+          if form == 'LTC':
+            price_form = ticker['ltc_usd']
+            string_from = 'balance.litecoin.available'
+            balance_from = user['balance']['litecoin']['available']
+          if form == 'XRP':
+            price_form = ticker['xrp_usd']
+            string_from = 'balance.ripple.available'
+            balance_from = user['balance']['ripple']['available']
+          if form == 'USDT':
+            price_form = ticker['usdt_usd']
+            string_from = 'balance.tether.available'
+            balance_from = user['balance']['tether']['available']
+          if form == 'DASH':
+            price_form = ticker['dash_usd']
+            string_from = 'balance.dash.available'
+            balance_from = user['balance']['dash']['available']
+          if form == 'EOS':
+            price_form = ticker['eso_usd']
+            string_from = 'balance.eos.available'
+            balance_from = user['balance']['eos']['available']
+          if form == 'ASIC':
+            price_form = ticker['coin_usd']
+            string_from = 'balance.coin.available'
+            balance_from = user['balance']['coin']['available']
 
-      balance_add = (float(amount_usd_form)/float(price_to))*100000000
-      balance_sub = float(amount)*100000000 + float(amount)*100000000*0.0025
+          amount_usd_form = float(amount)*float(price_form)
 
-      new_balance_add = float(balance_add) + float(user[string_to])
-      new_balance_sub = float(user[string_from]) - float(balance_sub)
+          if to == 'BTC': 
+            price_to = ticker['btc_usd']
+            string_to = 'balance.bitcoin.available'
+            balance_to = user['balance']['bitcoin']['available']
+          if to == 'ETH':
+            price_to = ticker['eth_usd']
+            string_to = 'balance.ethereum.available'
+            balance_to = user['balance']['ethereum']['available']
+          if to == 'LTC':
+            price_to = ticker['ltc_usd']
+            string_to = 'balance.litecoin.available'
+            balance_to = user['balance']['litecoin']['available']
+          if to == 'XRP':
+            price_to = ticker['xrp_usd']
+            string_to = 'balance.ripple.available'
+            balance_to = user['balance']['ripple']['available']
+          if to == 'USDT':
+            price_to = ticker['usdt_usd']
+            string_to = 'balance.tether.available'
+            balance_to = user['balance']['tether']['available']
+          if to == 'DASH':
+            price_to = ticker['dash_usd']
+            string_to = 'balance.dash.available'
+            balance_to = user['balance']['dash']['available']
+          if to == 'EOS':
+            price_to = ticker['eos_usd']
+            string_to = 'balance.eos.available'
+            balance_to = user['balance']['eos']['available']
+          if to == 'ASIC':
+            price_to = ticker['coin_usd']
+            string_to = 'balance.coin.available'
+            balance_to = user['balance']['coin']['available']
 
-      
-      db.users.update({ "customer_id" : customer_id }, { '$set': { string_from: float(new_balance_sub) ,string_to : float(new_balance_add)} })
-      
-      #save lich su
-      data_history = {
-          'uid':  customer_id,
-          'user_id': customer_id,
-          'username': user['email'],
-          'detail':  'exchange',
-          'amount_form': float(amount),
-          'amount_to' :  float(balance_add)/100000000,
-          'currency_from' :  form,
-          'currency_to' :  to,
-          'price_form' : price_form,
-          'price_to':  price_to,
-          'date_added' : datetime.utcnow()
-      }
-      db.exchanges.insert(data_history)
+          balance_add = ((float(amount_usd_form)/float(price_to))*100000000)*0.9975
+          balance_sub = float(amount)*100000000
 
-      return json.dumps({
-          'status': 'complete', 
-          'message': 'Account successfully created' 
-      })
+          new_balance_add = round((float(balance_add) + float(balance_to)),8)
+          new_balance_sub = round((float(balance_from) - float(balance_sub)),8)
+
+          new_coin_fee = round((float(user['balance']['coin']['available']) - 100000),8)
+
+          db.users.update({ "customer_id" : customer_id }, { '$set': { string_from: float(new_balance_sub) ,string_to : float(new_balance_add) } })
+          
+          #save lich su
+          data_history = {
+              'uid':  customer_id,
+              'user_id': customer_id,
+              'username': user['email'],
+              'detail':  'exchange',
+              'amount_form': round(float(amount),8),
+              'amount_to' :  round((float(balance_add)/100000000),8),
+              'currency_from' :  form,
+              'currency_to' :  to,
+              'price_form' : price_form,
+              'price_to':  price_to,
+              'date_added' : datetime.utcnow()
+          }
+          db.exchanges.insert(data_history)
+
+          #fee
+          userss = db.User.find_one({'customer_id': customer_id})
+          new_coin_fee = round((float(userss['balance']['coin']['available']) - 100000),8)
+          db.users.update({ "customer_id" : customer_id }, { '$set': { 'balance.coin.available' : new_coin_fee } })
+         
+          return json.dumps({
+              'status': 'complete', 
+              'message': 'Account successfully created' 
+          })
+        else:
+          return json.dumps({
+              'status': 'error',
+              'message': 'You do not have enough 0.001 ASIC to make transaction fees' 
+          })
+      else:
+        return json.dumps({
+            'status': 'error', 
+            'message': 'Your '+str(form)+' balance is not enough to exchange.' 
+        })
     else:
       return json.dumps({
-          'status': 'error', 
-          'message': 'Your '+str(form)+' balance is not enough to exchange.' 
+        'status': 'error', 
+        'message': 'Wrong password transaction. Please try again' 
       })
     
 @apiexchange_ctrl.route('/submit-support', methods=['GET', 'POST'])
@@ -213,6 +339,31 @@ def get_historys():
       })
     return json.dumps(array)
 
+@apiexchange_ctrl.route('/get-search-history', methods=['GET', 'POST'])
+def get_search_history():
+
+    dataDict = json.loads(request.data)
+    customer_id = dataDict['customer_id']
+    from_currency = dataDict['from_currency']
+    to_currency = dataDict['to_currency']
+    start = dataDict['start']
+    limit = dataDict['limit']
+    exchanges = db.exchanges.find({'$and' : [{'uid': customer_id},{'currency_from' : from_currency},{'currency_to' : to_currency}]} ).sort([("date_added", -1)]).limit(limit).skip(start)
+
+    array = []
+    for item in exchanges:
+      array.append({
+        "username" : item['username'],
+        "amount_form" : item['amount_form'],
+        "amount_to" : item['amount_to'],
+        "price_form" : item['price_form'],
+        "price_to" : item['price_to'],
+        "currency_from" :  item['currency_from'],
+        "currency_to" :  item['currency_to'],
+        "date_added" : (item['date_added']).strftime('%H:%M %d-%m-%Y')
+      })
+    return json.dumps(array)
+
 @apiexchange_ctrl.route('/get-notification', methods=['GET', 'POST'])
 def get_notification():
 
@@ -232,6 +383,7 @@ def get_notification():
         "type" : item['type'],
         "read" : item['read'],
         "status" : item['status'],
+        "title" : item['title'],
         "date_added" : (item['date_added']).strftime('%H:%M %d-%m-%Y')
       })
     return json.dumps(array)
@@ -279,8 +431,7 @@ def get_history_dialing():
     start = dataDict['start']
     limit = dataDict['limit']
     
-    history = db.dialings.find({'$and' : [{'customer_id': customer_id}]}).sort([("date_added", -1)]).limit(limit).skip(start)
-    #.sort("date_added", -1)
+    history = db.dialings.find({'$and' : [{'customer_id': customer_id},{'status' : 1}]}).sort([("date_added", -1)]).limit(limit).skip(start)
 
     array = []
     
@@ -328,10 +479,10 @@ def update_number_dialing():
       db.dialings.update({'_id': ObjectId(history['_id'])},{'$set' : {'amount_coin' : number_random,'status' :1}})
       customer = db.users.find_one({'customer_id': customer_id})
 
-      coin_balance = float(customer['coin_balance'])
+      coin_balance = float(customer['balance']['coin']['available'])
       new_coin_balance = float(coin_balance) + (float(number_random)*100000000)
       new_coin_balance = float(new_coin_balance)
-      db.users.update({ "_id" : ObjectId(customer['_id']) }, { '$set': {'coin_balance' : new_coin_balance } })
+      db.users.update({ "_id" : ObjectId(customer['_id']) }, { '$set': {'balance.coin.available' : new_coin_balance } })
             
     return json.dumps({
       'status' : 'complete'
@@ -429,19 +580,7 @@ def get_notification_id():
     })
 
 
-@apiexchange_ctrl.route('/load-price', methods=['GET', 'POST'])
-def load_price():
-    ticker = db.tickers.find_one({})
-    
-    return json.dumps({
-        'status': 'complete', 
-        'btc_usd': ticker['btc_usd'],
-        'eth_usd': ticker['eth_usd'],
-        'ltc_usd': ticker['ltc_usd'],
-        'xrp_usd': ticker['xrp_usd'],
-        'coin_usd': ticker['coin_usd'],
-        'usdt_usd': ticker['usdt_usd']
-    })
+
     
 @apiexchange_ctrl.route('/get-member', methods=['GET', 'POST'])
 def get_member():
@@ -460,8 +599,7 @@ def get_member():
         "customer_id" : item['customer_id'],
         "email" : item['email'],
         "level" : item['level'],
-        "img_profile" : item['img_profile'],
-        "active_email" : item['active_email'],
+        "img_profile" : item['personal_info']['img_profile'],
         "date_added" : (item['creation']).strftime('%H:%M %d-%m-%Y')
       })
     return json.dumps(array)

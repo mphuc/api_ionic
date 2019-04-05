@@ -7,18 +7,23 @@ __author__ = 'taijoe'
 
 
 class Wallet(Document):
-    __collection__ = 'wallet_payments'
+    __collection__ = 'wallet'
 
     structure = {
-        'uid':  unicode,
-        'username':  unicode,
-        'wallet' :  unicode,
-        'day_profit' :  float,
-        'number_prfit' : float,
-        'amount':  float,
-        'amount_btc':  float,
-        'date_finish':  unicode,
-        'total_date': float
+        'user_id': unicode,
+        'uid': unicode,
+        'username': unicode,
+        'confirmations': int,
+        'tx':  unicode,
+        'amount': float,
+        'type': unicode,
+        'date_added' : datetime.datetime,
+        'status': int,
+        'address': unicode,
+        'txt_id' : unicode,
+        'amount_usd': float,
+        'price' : float,
+        'currency' : unicode
     }
     use_dot_notation = True
 

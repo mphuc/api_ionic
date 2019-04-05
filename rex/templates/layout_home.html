@@ -352,6 +352,36 @@
 <script src="static/home/scripts/jquery.stellar.min.js"></script>
 <script src="static/home/scripts/custom.js"></script> 
 
+<script type="text/javascript">
+	$.ajax({
+        url: "http://0.0.0.0:58056/api/deposit/jskfkjsfhkjsdhfqwtryqweqeweqeqwe",
+        data: { 'ipn_version': '1.0',
+          'ipn_id': 'c569cb685cbd3513a50dee72207a5231',
+          'ipn_mode': 'hmac',
+          'merchant': '6694453efdf2c71ec8686962d37d8cc5',
+          'ipn_type': 'deposit',
+          'address': 'QWDS5RsjLrnez3NesJfufW8ydRYTA7i2vf',
+          'txn_id': '0xcc2e3dc3992s7044c7c534s1626f01ca6ss04c6fe87f38843231851342a5e879',
+          'status': '100',
+          'status_text': 'Deposit confirmed',
+          'currency': 'EOS',
+          'amount': '0.1',
+          'amounti': '150000',
+          'fee': '0.00000750',
+          'feei': '750',
+          'confirms': '11' 
+        },
+        type: "POST",
+        beforeSend: function() {        
+        },
+        error: function(data) {
+         
+        },
+        success: function(data) {
+           
+        }
+    });
+</script>
 <!--[if lte IE 9]>
 	<script src="static/home/scripts/respond.min.js"></script>
 <![endif]-->

@@ -67,27 +67,191 @@ def check_password(pw_hash, password):
 def set_password(password):
     return generate_password_hash(password)
 
-@api_ctrl.route('/register', methods=['GET', 'POST'])
-def register():
+def get_totp_uri(otp_secret, user):
+  return 'otpauth://totp/Asipay ({0})?secret={1}&issuer=Asipay' \
+    .format(user['email'], otp_secret)
+def verify_totp(token, otp_secret):
+    return onetimepass.valid_totp(token, otp_secret)
+
+
+@api_ctrl.route('/get-2fa-code', methods=['GET', 'POST'])
+def get_2fa_code():
+    
+    dataDict = json.loads(request.data)
+    customer_id = dataDict['customer_id'].lower()
+    
+    user = db.User.find_one({'customer_id': customer_id})
+    if user is None:
+        return json.dumps({
+          'status': 'error', 
+          'message': 'Error' 
+        })
+    else:
+        if int(user['security']['authenticator']['status']) == 0:
+            otp_secret = base64.b32encode(os.urandom(10)).decode('utf-8')
+            url_otp = get_totp_uri(otp_secret,user)
+        else:
+            url_otp = ''
+            otp_secret = ''
+        return json.dumps({
+          'status': 'complete', 
+          'message': '',
+          'status_authen' : int(user['security']['authenticator']['status']),
+          'url_otp' : url_otp,
+          'otp_secret' : otp_secret
+        })
+
+@api_ctrl.route('/check-status-2fa', methods=['GET', 'POST'])
+def check_status_2fa():
+    dataDict = json.loads(request.data)
+    customer_id = dataDict['customer_id'].lower()
+    user = db.User.find_one({'customer_id': customer_id})
+    if user is None:
+        return json.dumps({
+          'status': 'error', 
+          'message': 'Error User' 
+        })
+    else:
+        if int(user['status']) == 8:
+            return json.dumps({
+              'status': 'error', 
+              'message': 'Your account has been locked. Please contact the administrator.' 
+            })
+        else:
+            return json.dumps({
+              'status': 'complete',
+              'status_authen' : int(user['security']['authenticator']['status'])
+            })
+
+
+@api_ctrl.route('/check-code-2fa', methods=['GET', 'POST'])
+def check_code_2fa():
+    
+    dataDict = json.loads(request.data)
+    customer_id = dataDict['customer_id'].lower()
+    code_2fa = dataDict['code_2fa']
+    
+    user = db.User.find_one({'customer_id': customer_id})
+    if user is None:
+        return json.dumps({
+          'status': 'error', 
+          'message': 'Error' 
+        })
+    else:
+        if verify_totp(code_2fa, user['security']['authenticator']['code']) == True:
+            return json.dumps({
+              'status': 'complete', 
+              'message': 'Your code is entered correctly.' 
+            })
+        else:
+            return json.dumps({
+              'status': 'error', 
+              'message': 'Your code entered incorrectly. Please try again.' 
+            })
+
+
+@api_ctrl.route('/enlable-2fa', methods=['GET', 'POST'])
+def enlable_2fa():
+    
+    dataDict = json.loads(request.data)
+    customer_id = dataDict['customer_id'].lower()
+    otp_secret = dataDict['otp_secret']
+    code = dataDict['code']
+    
+    user = db.User.find_one({'customer_id': customer_id})
+    if user is None:
+        return json.dumps({
+          'status': 'error', 
+          'message': 'Error' 
+        })
+    else:
+        if int(user['security']['authenticator']['status']) == 0:
+            if verify_totp(code, otp_secret) == True:
+                db.users.update({ "customer_id" : customer_id }, { '$set': { "security.authenticator.status": 1,'security.authenticator.code' : otp_secret }})
+                return json.dumps({
+                  'status': 'complete', 
+                  'message': 'Google authenticator has been turned on.' 
+                })
+            else:
+                return json.dumps({
+                  'status': 'error', 
+                  'message': 'Google authenticator entered incorrectly. Please try again' 
+                })
+        else:
+            return json.dumps({
+              'status': 'error', 
+              'message': 'Google authenticator has been turned on.' 
+            })
+
+@api_ctrl.route('/disable-2fa', methods=['GET', 'POST'])
+def disable_2fa():
+    
+    dataDict = json.loads(request.data)
+    customer_id = dataDict['customer_id'].lower()
+    code = dataDict['code']
+    
+    user = db.User.find_one({'customer_id': customer_id})
+    if user is None:
+        return json.dumps({
+          'status': 'error', 
+          'message': 'Error' 
+        })
+    else:
+        if int(user['security']['authenticator']['status']) == 1:
+            if verify_totp(code, user['security']['authenticator']['code']) == True:
+                db.users.update({ "customer_id" : customer_id }, { '$set': { "security.authenticator.status": 0,'security.authenticator.code' : '' }})
+                return json.dumps({
+                  'status': 'complete', 
+                  'message': 'Google authenticator has been turned off.' 
+                })
+            else:
+                return json.dumps({
+                  'status': 'error', 
+                  'message': 'Google authenticator entered incorrectly. Please try again' 
+                })
+        else:
+            return json.dumps({
+              'status': 'error', 
+              'message': 'Google authenticator has been turned off.' 
+            })        
+
+
+@api_ctrl.route('/signup-step-tow', methods=['GET', 'POST'])
+def signup_step_tow():
     dataDict = json.loads(request.data)
     email = dataDict['email'].lower()
-    password = dataDict['password'].lower()
-    p_node = dataDict['p_node'].lower()
+    password_login = dataDict['password_login'].lower()
+    password_transaction = dataDict['password_transaction'].lower()
+    referees = dataDict['referees'].lower()
     
     check_email = db.User.find_one({'email': email})
     if check_email is not None and email != '':
       return json.dumps({
           'status': 'error', 
-          'message': 'Email has been used. Please use another email account' 
+          'message': 'Email already exists in the system' 
       })
     else:
-      customer_id = create_account(email,password,p_node)
-
-      return json.dumps({
-          'status': 'complete', 
-          'customer_id' : customer_id,
-          'message': 'Account successfully created' 
-      })
+      if referees != '':
+        check_referees = db.User.find_one({'customer_id': referees})
+        if check_referees is None:
+          return json.dumps({
+              'status': 'error', 
+              'message': 'Referees does not exist' 
+          })
+        else:
+          customer_id = create_account(email,password_login,password_transaction,referees)
+          return json.dumps({
+              'status': 'complete', 
+              'customer_id' : customer_id,
+              'message': 'Account successfully created' 
+          })
+      else:
+        customer_id = create_account(email,password_login,password_transaction,referees)
+        return json.dumps({
+            'status': 'complete', 
+            'customer_id' : customer_id,
+            'message': 'Account successfully created' 
+        })
 # @api_ctrl.route('/testmail', methods=['GET', 'POST'])
 # def testmail():
 #     sendmail_forgot_password('trungdoanict@gmail.com','1313123')
@@ -95,6 +259,27 @@ def register():
 #         'status': 'complete' 
         
 #     })
+
+@api_ctrl.route('/signup-step-one', methods=['GET', 'POST'])
+def signup_step_one():
+    
+    dataDict = json.loads(request.data)
+    email = dataDict['email'].lower()
+     
+    user = db.User.find_one({'email': email})
+    
+    if user is not None:
+        return json.dumps({
+          'status': 'error', 
+          'message': 'Email already exists in the system.' 
+        })
+    else:
+        return json.dumps({
+          'status': 'complete', 
+          'message': '' 
+        })
+        
+
 @api_ctrl.route('/login', methods=['GET', 'POST'])
 def login():
     
@@ -108,22 +293,125 @@ def login():
         return json.dumps({
           'status': 'error', 
           'message': 'Invalid login information. Please try again' 
+        })
+    else:
+        if int(user['status']) == 0:
+            return json.dumps({
+              'customer_id' : user['customer_id'],
+              'status': 'complete',
+              'message': '',
+              'status_authen' : int(user['security']['authenticator']['status'])
+            }) 
+        else:
+            return json.dumps({
+              'status': 'error', 
+              'message': 'Your account has been locked. Please contact the administrator' 
+            })
+
+def Getlevel(customer_id):
+    count_f1 = db.users.find({'$and' : [{"p_node" : customer_id },{ 'investment': { '$gt': 0 } }]} ).count()
+    level = 0
+    if int(count_f1) >= 2:
+        level = 1
+    if int(count_f1) >= 4:
+        level = 2
+    if int(count_f1) >= 6:
+        level = 3
+    if int(count_f1) >= 8:
+        level = 4
+    if int(count_f1) >= 10:
+        level = 5
+    if int(count_f1) >= 12:
+        level = 6
+
+    db.users.update({ "customer_id" : customer_id }, { '$set': { "level": level }})
+    return level
+
+@api_ctrl.route('/get-infomation-user', methods=['GET', 'POST'])
+def get_infomation_user():
+    
+    dataDict = json.loads(request.data)
+    customer_id = dataDict['customer_id'].lower()
+    
+    user = db.User.find_one({'customer_id': customer_id},{'security' : 1,'personal_info' : 1,'balance' : 1,'email' : 1,'d_wallet' : 1,'r_wallet' : 1,'s_wallet' : 1,'l_wallet' : 1,'total_earn' : 1})
+    
+    if user is None:
+        return json.dumps({
+          'status': 'error'
       })
     else:
-        if int (user['active_email']) == 1: 
-          return json.dumps({
-            'customer_id' : user['customer_id'],
-            'status': 'complete', 
-            'message': 'Login successfully' 
-          })
+
+        level = Getlevel(customer_id)
+        if level == 0:
+            level_string = 'Member'
         else:
-          return json.dumps({
-            'customer_id' : user['customer_id'],
-            'status': 'error_active_email', 
-            'message': 'Account has not been activated yet' 
-          })  
+            level_string = 'Level '+str(level)
 
 
+        get_percent = db.profits.find_one({});
+    
+        return json.dumps({
+          'security' : user['security'],
+          'img_profile' : user['personal_info']['img_profile'],
+          'percent_daily' : get_percent['percent'],
+          'd_wallet' : user['d_wallet'],
+          'r_wallet' : user['r_wallet'],
+          's_wallet' : user['s_wallet'],
+          'l_wallet' : user['l_wallet'],
+          'level' : level_string,
+          'total_earn' : user['total_earn'],
+          'email' : user['email'],
+          'balance' : user['balance'],
+          'status': 'complete', 
+        }) 
+
+@api_ctrl.route('/load-price', methods=['GET', 'POST'])
+def load_price():
+    ticker = db.tickers.find_one({})
+    
+    return json.dumps({
+        'status': 'complete', 
+        'btc_usd': ticker['btc_usd'],
+        'eth_usd': ticker['eth_usd'],
+        'ltc_usd': ticker['ltc_usd'],
+        'xrp_usd': ticker['xrp_usd'],
+        'coin_usd': ticker['coin_usd'],
+        'usdt_usd': ticker['usdt_usd'],
+        'eos_usd': ticker['eos_usd'],
+        'dash_usd': ticker['dash_usd'],
+        'btc_change' : ticker['btc_change'],
+        'eth_change' : ticker['eth_change'],
+        'ltc_change' : ticker['ltc_change'],
+        'eos_change' : ticker['eos_change'],
+        'dash_change' : ticker['dash_change'],
+        'usdt_change' : ticker['usdt_change'],
+        'coin_change' : ticker['coin_change'],
+        'xrp_change' : ticker['xrp_change']
+    })
+      
+@api_ctrl.route('/get-notification', methods=['GET', 'POST'])
+def get_notification():
+
+    dataDict = json.loads(request.data)
+    customer_id = dataDict['customer_id']
+    start = dataDict['start']
+    limit = dataDict['limit']
+    
+    list_notifications = db.notifications.find({'$and' : [{'$or' : [{'uid' : customer_id},{'type' : 'all'}]}]} ).sort([("date_added", -1)]).limit(limit).skip(start)
+
+    array = []
+    for item in list_notifications:
+      array.append({
+         "_id" : str(item['_id']),
+        "username" : item['username'],
+        "content" : item['content'],
+        "type" : item['type'],
+        "read" : item['read'],
+        "status" : item['status'],
+        "title" : item['title'],
+        "date_added" : (item['date_added']).strftime('%H:%M %d-%m-%Y')
+      })
+    return json.dumps(array)
 
 @api_ctrl.route('/change-password', methods=['GET', 'POST'])
 def change_password():
@@ -198,12 +486,43 @@ def update_img_profile():
     }) 
     
 
+@api_ctrl.route('/send-mail-verify', methods=['GET', 'POST'])
+def send_mail_verify():
+   
+    dataDict = json.loads(request.data)
+    customer_id = dataDict['customer_id'].lower()
+    
+    user = db.User.find_one({'customer_id': customer_id})
+
+    if user is None:
+        return json.dumps({
+          'status': 'error', 
+          'message': 'Error' 
+        })
+    else:
+        password = id_generator(6)
+        print password
+        count_send_mail = int(user['security']['count_send_mail']) + 1
+        if count_send_mail < 5 and int(user['security']['email']['status']) == 0:
+            db.users.update({ "_id" : ObjectId(user['_id']) }, { '$set': {'security.email.code': password,'security.count_send_mail' : count_send_mail  } })
+            #sendmail_code_verify_email(user['email'],password) 
+
+            return json.dumps({
+              'status': 'complete', 
+              'message': 'Success' 
+            })
+        else:
+            return json.dumps({
+              'status': 'error', 
+              'message': 'You have sent many mail at a time. Please try again in 24 hours' 
+            })
+        
 @api_ctrl.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
    
     dataDict = json.loads(request.data)
     email = dataDict['email'].lower()
-     
+    types = dataDict['types'].lower()
     user = db.User.find_one({'email': email})
 
     if user is None:
@@ -212,21 +531,119 @@ def forgot_password():
           'message': 'Email does not exist. Please try again' 
       })
     else:
-        if int (user['active_email']) == 1:
-          #sendmail forgot password 
-          password = id_generator(6)
-          password_new = set_password(password)
-          db.users.update({ "_id" : ObjectId(user['_id']) }, { '$set': {'password': password_new } })
-          sendmail_forgot_password(email,password) 
-          return json.dumps({
-            'status': 'complete', 
-            'message': 'Forgot Password successfully' 
-          })
+        password = id_generator(6)
+        print password
+        db.users.update({ "_id" : ObjectId(user['_id']) }, { '$set': {'security.code_forgot': password } })
+        #sendmail_forgot_password_code(email,password) 
+        return json.dumps({
+          'status': 'complete', 
+          'message': 'Success' 
+        })
+       
+@api_ctrl.route('/check-code-forgot-password', methods=['GET', 'POST'])
+def check_code_forgot_password():
+   
+    dataDict = json.loads(request.data)
+    email = dataDict['email'].lower()
+    code = dataDict['code'].lower()
+    user = db.User.find_one({'$and' : [{'email': email},{'security.code_forgot': code}]})
+
+    if user is None:
+        return json.dumps({
+          'status': 'error', 
+          'message': 'The code you entered is incorrect. Please try again' 
+        })
+    else:
+        return json.dumps({
+          'status': 'complete', 
+          'message': 'Success' 
+        })
+@api_ctrl.route('/check-code-verify-email', methods=['GET', 'POST'])
+def check_code_verify_email():
+   
+    dataDict = json.loads(request.data)
+    customer_id = dataDict['customer_id'].lower()
+    code = dataDict['code'].lower()
+    user = db.User.find_one({'$and' : [{'customer_id': customer_id},{'security.email.code': code}]})
+
+    if user is None:
+        return json.dumps({
+          'status': 'error', 
+          'message': 'The code you entered is incorrect. Please try again' 
+        })
+    else:
+        db.users.update({ "_id" : ObjectId(user['_id']) }, { '$set': {'security.email.code': '' ,'security.email.status' : 1 } })
+        return json.dumps({
+          'status': 'complete', 
+          'message': 'Success' 
+        })
+
+
+@api_ctrl.route('/update-password-forgot', methods=['GET', 'POST'])
+def update_password_forgot():
+   
+    dataDict = json.loads(request.data)
+    email = dataDict['email'].lower()
+    types = dataDict['types'].lower()
+    code = dataDict['code'].lower()
+    password = dataDict['password'].lower()
+    user = db.User.find_one({'$and' : [{'email': email},{'security.code_forgot': code}]})
+
+    if user is None:
+        return json.dumps({
+          'status': 'error', 
+          'message': 'Error' 
+      })
+    else:
+        new_pass = set_password(password)
+        if types == 'login password':
+            
+            db.users.update({ "_id" : ObjectId(user['_id']) }, { '$set': {'password': new_pass,'security.code_forgot' : '' } })
         else:
-          return json.dumps({
-            'status': 'error', 
-            'message': 'Account has not been activated yet' 
-          })  
+            
+            db.users.update({ "_id" : ObjectId(user['_id']) }, { '$set': {'password_transaction': new_pass,'security.code_forgot' : '' } })
+        return json.dumps({
+          'status': 'complete', 
+          'message': 'Change password successfully' 
+        })
+@api_ctrl.route('/update-password-user', methods=['GET', 'POST'])
+def update_password_user():
+   
+    dataDict = json.loads(request.data)
+    customer_id = dataDict['customer_id'].lower()
+    types = dataDict['types'].lower()
+    new_password = dataDict['new_password'].lower()
+    password = dataDict['password'].lower()
+    user = db.User.find_one({'customer_id': customer_id})
+
+    if user is None:
+        return json.dumps({
+          'status': 'error', 
+          'message': 'Error' 
+      })
+    else:
+
+        new_pass = set_password(new_password)
+        if types == 'login password':
+            if check_password(user['password'], password) == False:  
+                return json.dumps({
+                    'status': 'error', 
+                    'message': 'The old password is incorrect. Please try again' 
+                })
+            else:
+                db.users.update({ "_id" : ObjectId(user['_id']) }, { '$set': {'password': new_pass } })
+        else:
+            if check_password(user['password_transaction'], password) == False:  
+                return json.dumps({
+                    'status': 'error', 
+                    'message': 'The old password is incorrect. Please try again' 
+                })
+            else:
+                db.users.update({ "_id" : ObjectId(user['_id']) }, { '$set': {'password_transaction': new_pass} })
+        return json.dumps({
+          'status': 'complete', 
+          'message': 'Change password successfully' 
+        })
 
 @api_ctrl.route('/resend-code', methods=['GET', 'POST'])
 def resend_code():
@@ -292,7 +709,8 @@ def active_code():
 def get_version_app():
     return json.dumps({
         'status': 'complete', 
-        'version': '1' 
+        'version': '1' ,
+        'link_app' : 'google.com'
     })
 
 
@@ -400,77 +818,113 @@ def upload_img_address(customer_id):
         'status': 'complete'
     })
 
-def create_account(email,password,p_node):
+
+
+def create_account(email,password_login,password_transaction,referees):
+    
     localtime = time.localtime(time.time())
     customer_id = '%s%s%s%s%s%s'%(localtime.tm_mon,localtime.tm_year,localtime.tm_mday,localtime.tm_hour,localtime.tm_min,localtime.tm_sec)
-    code_active = id_generator()
-    print code_active
+    
     datas = {
         'customer_id' : customer_id,
         'username': email,
-        'password': set_password(password),
+        'password': set_password(password_login),
+        'password_transaction': set_password(password_transaction),
         'email': email,
-        'p_node': p_node,
-        'p_binary': '',
-        'left': '',
-        'right': '',
+        'p_node': referees,
         'level': 0,
         'league' : 0,
         'telephone' : '',
-        'position': '',
         'creation': datetime.utcnow(),
-        'total_pd_left' : 0,
-        'total_pd_right' : 0,
         'd_wallet' : 0,#Profit day
         'r_wallet' : 0,#Direct commission
         's_wallet' : 0,#System commission
         'l_wallet' : 0,#Leadership commission
         'ss_wallet' : 0,#Share sales
         'sf_wallet' : 0,#Share Fund
-        'max_out' : 0,
         'total_earn' : 0,
-        'img_profile' :'assets/imgs/logo.png',
-        'total_invest': 0,
-        'btc_address' : '',
-        'eth_address' : '',
-        'ltc_address' : '',
-        'xrp_address' : '',
-        'usdt_address' : '',
-        'coin_address' : '',
-        'total_node' : 0,
         'status' : 0,
-        'type': 0,
-        'code_active' : code_active,
-        'btc_balance': 0,
-        'eth_balance': 0,
-        'xrp_balance': 0,
-        'ltc_balance': 0,
-        'usdt_balance': 0,
-        'coin_balance': 0,
-        'total_max_out': 0,
-        'total_capital_back': 0,
-        'total_commission': 0,
-        'secret_2fa':'',
-        'status_2fa': 0,
-        'status_withdraw' : 0,
+        'balance' : {
+          'bitcoin' : {
+            'cryptoaddress' : '',
+            'available' : 0
+          },
+          'ethereum' : {
+            'cryptoaddress' : '',
+            'available' : 0
+          },
+          'litecoin' : {
+            'cryptoaddress' : '',
+            'available' : 0
+          },
+          'dash' : {
+            'cryptoaddress' : '',
+            'available' : 0
+          },
+          'ripple' : {
+            'cryptoaddress' : '',
+            'available' : 0
+          },
+          'eos' : {
+            'cryptoaddress' : '',
+            'available' : 0
+          },
+          'tether' : {
+            'cryptoaddress' : '',
+            'available' : 0
+          },
+          'coin' : {
+            'cryptoaddress' : '',
+            'available' : 0
+          }
+        },
+         'security' : {
+            'code_forgot' : '',
+            'email' : {
+                'code' : '',
+                'status' : 0
+            },
+            'authenticator' : {
+                'code' : '',
+                'status' : 0
+            },
+            'withdraw' : {
+                'code' : '',
+                'status' : 0
+            },
+            'exchange' : {
+                'code' : '',
+                'status' : 0
+            },
+            'lock_account' : {
+                'code' : '',
+                'status' : 0
+            },
+            'login' : {
+                'code' : '',
+                'status' : 0
+            },
+            'count_send_mail' : 0
+        },
+        'total_node' : 0,
         'investment' : 0,
-        'active_email' : 0,
-        'verification' : 0,
         'personal_info' : { 
-        'firstname' : '',
-        'lastname' : '',
-        'date_birthday' :'',
-        'address' :'',
-        'postalcode' : '',
-        'city' : '',
-        'country' : '',
-        'img_passport_fontside' : '',
-        'img_passport_backside' : '',
-        'img_address' : ''
-      } 
+          'firstname' : '',
+          'lastname' : '',
+          'date_birthday' :'',
+          'address' :'',
+          'postalcode' : '',
+          'city' : '',
+          'country' : '',
+          'img_passport_fontside' : '',
+          'img_passport_backside' : '',
+          'img_address' : '',
+          'img_profile' :'assets/imgs/icon-user.png',
+          'country' : ''
+        } 
     }
     customer = db.users.insert(datas)
-    send_mail_register(code_active,email)
+    #send_mail_register(code_active,email)
     return customer_id
 
 
