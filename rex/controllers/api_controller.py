@@ -31,6 +31,8 @@ import sys
 
 import requests
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+
+from rex.config import Config
 sys.setrecursionlimit(10000)
 digits58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
@@ -73,6 +75,9 @@ def get_totp_uri(otp_secret, user):
 def verify_totp(token, otp_secret):
     return onetimepass.valid_totp(token, otp_secret)
 
+@api_ctrl.route('/testsss', methods=['GET', 'POST'])
+def testsss():
+  sendmail_code_verify_email('trungdoanict@gmail.com','12312312')
 
 @api_ctrl.route('/get-2fa-code', methods=['GET', 'POST'])
 def get_2fa_code():
@@ -252,13 +257,7 @@ def signup_step_tow():
             'customer_id' : customer_id,
             'message': 'Account successfully created' 
         })
-# @api_ctrl.route('/testmail', methods=['GET', 'POST'])
-# def testmail():
-#     sendmail_forgot_password('trungdoanict@gmail.com','1313123')
-#     return json.dumps({
-#         'status': 'complete' 
-        
-#     })
+
 
 @api_ctrl.route('/signup-step-one', methods=['GET', 'POST'])
 def signup_step_one():
@@ -505,7 +504,7 @@ def send_mail_verify():
         count_send_mail = int(user['security']['count_send_mail']) + 1
         if count_send_mail < 5 and int(user['security']['email']['status']) == 0:
             db.users.update({ "_id" : ObjectId(user['_id']) }, { '$set': {'security.email.code': password,'security.count_send_mail' : count_send_mail  } })
-            #sendmail_code_verify_email(user['email'],password) 
+            sendmail_code_verify_email(user['email'],password) 
 
             return json.dumps({
               'status': 'complete', 
@@ -534,7 +533,7 @@ def forgot_password():
         password = id_generator(6)
         print password
         db.users.update({ "_id" : ObjectId(user['_id']) }, { '$set': {'security.code_forgot': password } })
-        #sendmail_forgot_password_code(email,password) 
+        sendmail_forgot_password_code(email,password) 
         return json.dumps({
           'status': 'complete', 
           'message': 'Success' 
@@ -666,7 +665,7 @@ def resend_code():
           # db.users.update({"customer_id": customer_id}, { "$set": { "code_active":code_active} })
           #sendmail Resend Code user['code_active']
 
-          send_mail_register(user['code_active'],user['email'])
+          #send_mail_register(user['code_active'],user['email'])
           return json.dumps({
             'status': 'complete', 
             'message': 'Resend Code successfully' 
@@ -726,12 +725,12 @@ def upload_img_profile(customer_id):
         os.makedirs(save_path)
 
     name = upload.filename
-    print name,save_path
+    #print name,save_path
     file_path = "{path}/{file}".format(path=save_path, file=name)
     upload.save(file_path)
     
     url_img_save = 'https://api.buy-sellpro.co/static/img/upload/'+name
-    print url_img_save
+    #print url_img_save
     db.users.update({ "customer_id" : customer_id }, { '$set': { "personal_info.img_profile": url_img_save } })
     return json.dumps({
         'status': 'complete', 
@@ -925,44 +924,58 @@ def create_account(email,password_login,password_transaction,referees):
         } 
     }
     customer = db.users.insert(datas)
-    #send_mail_register(code_active,email)
+    send_mail_register(email)
     return customer_id
 
 
-def send_mail_register(code_active,email):
+def send_mail_register(email):
     html = """ 
-      <div style="width: 100%; "><div style="background: #2E6F9C; height: 150px;text-align: center;"><img src="https://i.ibb.co/tH5J6C2/logo.png" width="120px;" style="margin-top: 30px;" /></div><br><br>
-      Thank you for registering with Asipay. Please enter the code to activate the account.<br><br>
-      Your code is: <b>"""+str(code_active)+"""</b>
-      <br><br><br>Regards,<br>Asipay Account Services<div class="yj6qo"></div><div class="adL"><br><br><br></div></div>
+      <div style="width: 100%;background: #f3f3f3;"><div style="width: 80%;background: #fff; margin: 0 auto "><div style="background: linear-gradient(to top, #160c56 0%, #052238 100%); height: 150px;text-align: center;"><img src="https://i.ibb.co/tH5J6C2/logo.png" width="120px;" style="margin-top: 30px;" /></div><br/><div style="padding: 20px;">
+      <p style="color: #222; font-size: 14px;">Thank you for registering with Asipay.</p>
+      <p style="color: #222;  font-size: 14px;">Congratulations on successful account registration with email: <b>"""+str(email)+"""</b>. You can use our service now.</p>
+      <p style="color: #222;  font-size: 14px;"><br>Regards,</p><p style="color: #222; font-size: 14px;">Asipay Account Services</p><div class="yj6qo"></div><div class="adL"><br><br><br></div></div></div></div>
     """
     return requests.post(
-      "https://api.mailgun.net/v3/diamondcapital.co/messages",
-      auth=("api", "key-cade8d5a3d4f7fcc9a15562aaec55034"),
-      data={"from": "Asipay <info@diamondcapital.co>",
+      Config().utl_mail,
+      auth=("api", Config().api_mail),
+      data={"from": Config().from_mail,
         "to": ["", email],
-        "subject": "Account registration successful",
+        "subject": "Register Account",
         "html": html}) 
     return True
 
    
-def sendmail_forgot_password(email,password):
+def sendmail_forgot_password_code(email,code):
     html = """ 
-      <div style="width: 100%; "><div style="background: #2E6F9C; height: 150px;text-align: center;"><img src="https://i.ibb.co/tH5J6C2/logo.png" width="120px;" style="margin-top: 30px;" /></div><br><br>
-      Thank you for registering with Asipay. Please enter a new password to login.<br><br>
-      Your password new is: <b>"""+str(password)+"""</b>
-      <br><br><br>Regards,<br>Asipay Account Services<div class="yj6qo"></div><div class="adL"><br><br><br></div></div>
+      <div style="width: 100%;background: #f3f3f3;"><div style="width: 80%;background: #fff; margin: 0 auto "><div style="background: linear-gradient(to top, #160c56 0%, #052238 100%); height: 150px;text-align: center;"><img src="https://i.ibb.co/tH5J6C2/logo.png" width="120px;" style="margin-top: 30px;" /></div><br/><div style="padding: 20px;">
+      <p style="color: #222; font-size: 14px;">Thank you for registering with Asipay.</p>
+      <p style="color: #222;  font-size: 14px;">Your verification code is <b>"""+str(code)+"""</b>, Please do not disclose this to others! </p>
+      <p style="color: #222;  font-size: 14px;"><br>Regards,</p><p style="color: #222; font-size: 14px;">Asipay Account Services</p><div class="yj6qo"></div><div class="adL"><br><br><br></div></div></div></div>
     """
     return requests.post(
-      "https://api.mailgun.net/v3/diamondcapital.co/messages",
-      auth=("api", "key-cade8d5a3d4f7fcc9a15562aaec55034"),
-      data={"from": "Asipay <info@diamondcapital.co>",
+      Config().utl_mail,
+      auth=("api", Config().api_mail),
+      data={"from": Config().from_mail,
         "to": ["", email],
-        "subject": "New Password",
+        "subject": "Forgot Password",
         "html": html}) 
     return True
 
-
+def sendmail_code_verify_email(email,code):
+    html = """ 
+      <div style="width: 100%;background: #f3f3f3;"><div style="width: 80%;background: #fff; margin: 0 auto "><div style="background: linear-gradient(to top, #160c56 0%, #052238 100%); height: 150px;text-align: center;"><img src="https://i.ibb.co/tH5J6C2/logo.png" width="120px;" style="margin-top: 30px;" /></div><br/><div style="padding: 20px;">
+      <p style="color: #222; font-size: 14px;">Thank you for registering with Asipay.</p>
+      <p style="color: #222;  font-size: 14px;">Your verification code is <b>"""+str(code)+"""</b>, Please do not disclose this to others! </p>
+      <p style="color: #222;  font-size: 14px;"><br>Regards,</p><p style="color: #222; font-size: 14px;">Asipay Account Services</p><div class="yj6qo"></div><div class="adL"><br><br><br></div></div></div></div>
+    """
+    return requests.post(
+      Config().utl_mail,
+      auth=("api", Config().api_mail),
+      data={"from": Config().from_mail,
+        "to": ["", email],
+        "subject": "Verify Email",
+        "html": html}) 
+    return True
 
 @api_ctrl.route('/auto-tickers', methods=['GET', 'POST'])
 def auto_tickers():
