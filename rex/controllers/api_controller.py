@@ -724,11 +724,7 @@ def upload_img_profile(customer_id):
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-
-    localtime = time.localtime(time.time())
-    str_string = '%s%s%s%s%s%s'%(localtime.tm_mon,localtime.tm_year,localtime.tm_mday,localtime.tm_hour,localtime.tm_min,localtime.tm_sec)
-    
-    name = str_string+'_'+upload.filename
+    name = upload.filename
     #print name,save_path
     file_path = "{path}/{file}".format(path=save_path, file=name)
     upload.save(file_path)
