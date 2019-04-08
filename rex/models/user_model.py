@@ -102,6 +102,10 @@ class User(Document):
                 'code' : unicode,
                 'status' : int
             },
+            'fingerprint' : {
+                'code' : unicode,
+                'status' : int
+            },
             'count_send_mail' : int
         },
         'personal_info': {

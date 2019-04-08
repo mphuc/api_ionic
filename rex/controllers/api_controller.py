@@ -188,6 +188,43 @@ def enlable_2fa():
               'message': 'Google authenticator has been turned on.' 
             })
 
+@api_ctrl.route('/enlable-fingerprint', methods=['GET', 'POST'])
+def enlable_fingerprint():
+    
+    dataDict = json.loads(request.data)
+    customer_id = dataDict['customer_id'].lower()
+    
+    user = db.User.find_one({'customer_id': customer_id})
+    if user is None:
+        return json.dumps({
+          'status': 'error', 
+          'message': 'Error' 
+        })
+    else:
+        db.users.update({ "customer_id" : customer_id }, { '$set': { "security.fingerprint.status": 1 }})
+        return json.dumps({
+          'status': 'error', 
+          'message': 'Fingerprint login has been turned on.' 
+        })
+
+@api_ctrl.route('/disable-fingerprint', methods=['GET', 'POST'])
+def disable_fingerprint():
+    
+    dataDict = json.loads(request.data)
+    customer_id = dataDict['customer_id'].lower()
+    
+    user = db.User.find_one({'customer_id': customer_id})
+    if user is None:
+        return json.dumps({
+          'status': 'error', 
+          'message': 'Error' 
+        })
+    else:
+        db.users.update({ "customer_id" : customer_id }, { '$set': { "security.fingerprint.status": 0 }})
+        return json.dumps({
+          'status': 'error', 
+          'message': 'Fingerprint login has been turned off.' 
+        })
 @api_ctrl.route('/disable-2fa', methods=['GET', 'POST'])
 def disable_2fa():
     
@@ -901,6 +938,10 @@ def create_account(email,password_login,password_transaction,referees):
                 'status' : 0
             },
             'login' : {
+                'code' : '',
+                'status' : 0
+            },
+            'fingerprint' :  {
                 'code' : '',
                 'status' : 0
             },
