@@ -219,7 +219,17 @@ def disable_package():
     new_balance_add = float(val_balance) + float(val_add_balance)
 
               
-    db.users.update({ "customer_id" : customer_id }, { '$set': { string_query: float(new_balance_add)} })
+    db.users.update({ "customer_id" : customer_id }, { '$set': { string_query: float(new_balance_add) ,'investment' : 0 } })
+
+
+    customer = db.User.find_one({'customer_id': customer_id})
+
+    investments = db.investments.find({'$and' : [{'uid': customer_id},{'status' : 1}]})
+    investment_usd = 0
+    for items in investments:
+        investment_usd += float(items['amount_usd'])
+    if  float(investment_usd) > 0:
+        db.users.update({ "customer_id" : customer_id }, { '$set': { 'investment' : investment_usd } })
 
     return json.dumps({
         'status': 'complete', 
