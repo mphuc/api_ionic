@@ -336,7 +336,7 @@ def login():
               'customer_id' : user['customer_id'],
               'status': 'complete',
               'message': '',
-              'status_authen' : int(user['security']['authenticator']['status'])
+              'status_fingerprint' : int(user['security']['fingerprint']['status'])
             }) 
         else:
             return json.dumps({
