@@ -203,7 +203,7 @@ def enlable_fingerprint():
     else:
         db.users.update({ "customer_id" : customer_id }, { '$set': { "security.fingerprint.status": 1 }})
         return json.dumps({
-          'status': 'error', 
+          'status': 'complete', 
           'message': 'Fingerprint login has been turned on.' 
         })
 
@@ -222,7 +222,7 @@ def disable_fingerprint():
     else:
         db.users.update({ "customer_id" : customer_id }, { '$set': { "security.fingerprint.status": 0 }})
         return json.dumps({
-          'status': 'error', 
+          'status': 'complete', 
           'message': 'Fingerprint login has been turned off.' 
         })
 @api_ctrl.route('/disable-2fa', methods=['GET', 'POST'])
