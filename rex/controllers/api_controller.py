@@ -762,6 +762,10 @@ def upload_img_profile(customer_id):
         os.makedirs(save_path)
 
     name = upload.filename
+
+    check_name = name.split("?")
+    if len(check_name) >=2:
+      name = check_name[1]+'Pic.jpg'
     #print name,save_path
     file_path = "{path}/{file}".format(path=save_path, file=name)
     upload.save(file_path)
