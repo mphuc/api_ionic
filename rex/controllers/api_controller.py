@@ -781,7 +781,7 @@ def upload_img_profile(customer_id):
     db.users.update({ "customer_id" : customer_id }, { '$set': { "personal_info.img_profile": url_img_save } })
     return json.dumps({
         'status': 'complete', 
-        'name_ifle' : url_img_save
+        'name_file' : url_img_save
     })
     
 @api_ctrl.route('/upload-img-passport-fontside/<customer_id>', methods=['GET', 'POST'])
