@@ -752,7 +752,7 @@ def get_version_app():
 
 @api_ctrl.route('/upload-img-profile/<customer_id>', methods=['GET', 'POST'])
 def upload_img_profile(customer_id):
-    print customer_id
+    
     SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
     
     upload     = request.files.get('file')
@@ -761,12 +761,18 @@ def upload_img_profile(customer_id):
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
+    localtime = time.localtime(time.time())
+    random_number = '%s%s%s'%(localtime.tm_hour,localtime.tm_min,localtime.tm_sec)
+
     name = upload.filename
 
     check_name = name.split("?")
     if len(check_name) >=2:
       name = check_name[1]+'Pic.jpg'
     #print name,save_path
+
+    name = random_number+name
+
     file_path = "{path}/{file}".format(path=save_path, file=name)
     upload.save(file_path)
     
