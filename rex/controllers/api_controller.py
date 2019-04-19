@@ -752,7 +752,7 @@ def get_version_app():
 
 @api_ctrl.route('/upload-img-profile/<customer_id>', methods=['GET', 'POST'])
 def upload_img_profile(customer_id):
-    
+    print customer_id
     SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
     
     upload     = request.files.get('file')
