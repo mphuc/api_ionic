@@ -769,8 +769,7 @@ def upload_img_profile(customer_id):
     check_name = name.split("?")
     if len(check_name) >=2:
       name = check_name[1]+'Pic.jpg'
-    #print name,save_path
-
+    
     name = random_number+name
 
     file_path = "{path}/{file}".format(path=save_path, file=name)
