@@ -422,7 +422,7 @@ def withdraw_currency():
                       'username': user['username'],
                       'amount': float(amount),
                       'type': 'withdraw',
-                      'txt_id': '',
+                      'txt_id': '<span class="pending">Pending</span>',
                       'date_added' : datetime.utcnow(),
                       'status': 0,
                       'address': address,
