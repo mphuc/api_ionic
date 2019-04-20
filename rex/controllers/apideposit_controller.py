@@ -262,7 +262,8 @@ def get_history_currency():
     currency = dataDict['currency']
     start = dataDict['start']
     limit = dataDict['limit']
-    list_wallet = db.wallets.find({'$and' : [{'uid': customer_id},{'currency': currency},{'status': 1}]}).sort([("date_added", -1)]).limit(limit).skip(start)
+    types = dataDict['types']
+    list_wallet = db.wallets.find({'$and' : [{'type' : types},{'uid': customer_id},{'currency': currency},{'status': 1}]}).sort([("date_added", -1)]).limit(limit).skip(start)
     array = []
     for item in list_wallet:
       
