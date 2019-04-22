@@ -888,7 +888,7 @@ def upload_img_address(customer_id):
 
     user = db.users.find_one({'customer_id': customer_id})
     user['personal_info']['img_address'] = url_img_save
-    user['verification'] = 1
+    user['security']['verifyaccount']['status'] = 1
     db.users.save(user)
     return json.dumps({
         'status': 'complete'
@@ -981,6 +981,10 @@ def create_account(email,password_login,password_transaction,referees):
                 'status' : 0
             },
             'fingerprint' :  {
+                'code' : '',
+                'status' : 0
+            },
+            'verifyaccount' :  {
                 'code' : '',
                 'status' : 0
             },

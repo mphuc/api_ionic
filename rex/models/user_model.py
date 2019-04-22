@@ -106,6 +106,10 @@ class User(Document):
                 'code' : unicode,
                 'status' : int
             },
+            'verifyaccount' : {
+                'code' : unicode,
+                'status' : int
+            },
             'count_send_mail' : int
         },
         'personal_info': {
