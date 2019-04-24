@@ -403,8 +403,8 @@ def withdraw_currency():
 
         if (float(price_atlcoin) * float(amount)) > 50:
 
-            if check_password(user['password_transaction'], password_transaction) == True or 1==1:
-
+            if check_password(user['password_transaction'], password_transaction) == True:
+                print val_balance,float(amount)*100000000
                 if float(val_balance) >= float(amount)*100000000:
                   if float(user['balance']['coin']['available']) >= 100000:
 
