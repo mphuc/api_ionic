@@ -73,10 +73,10 @@ def de_email(email):
 @apiinvestment_ctrl.route('/testinvest', methods=['GET', 'POST'])
 def testinvest():
     
-    # Update_level_all_user()
-    # time.sleep( 1 )
-    # caculator_profitDaily()
-    Share_commission(1000000)
+    Update_level_all_user()
+    time.sleep( 5 )
+    caculator_profitDaily()
+    #Share_commission(1000000)
     return json.dumps({
         'status': 'array' 
         
