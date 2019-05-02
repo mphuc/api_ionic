@@ -448,7 +448,7 @@ def get_number_dialing():
     dataDict = json.loads(request.data)
     customer_id = dataDict['customer_id']
     
-    now = datetime.today()
+    now = atetime.utcnow()
 
     print now
 
@@ -469,7 +469,7 @@ def update_number_dialing():
     customer_id = dataDict['customer_id']
     number_random = dataDict['number_random']
 
-    now = datetime.today()
+    now = atetime.utcnow()
     history = db.dialings.find_one({'$and' : [{'customer_id': customer_id},{'status' : 0},{"date_finish": { "$lte": now }}]})
     #.sort("date_added", -1)
     if history is not None:
