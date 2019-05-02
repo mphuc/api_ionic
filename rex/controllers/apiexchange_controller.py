@@ -450,6 +450,8 @@ def get_number_dialing():
     
     now = datetime.today()
 
+    print now
+
     number_dialing = db.dialings.find({'$and' : [{'customer_id': customer_id},{'status' : 0},{"date_finish": { "$lte": now }}]}).count()
 
     number_dialing_pending = db.dialings.find({'$and' : [{'customer_id': customer_id},{'status' : 0},{"date_finish": { "$gt": now }}]}).count()
