@@ -16,6 +16,7 @@ class History(Document):
         'amount': float,
         'currency' :  unicode,
         'type':  unicode,
+        'email_link' : unicode,
         'date_added' : datetime.datetime
     }
     use_dot_notation = True

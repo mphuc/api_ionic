@@ -369,7 +369,7 @@ def get_infomation_user():
     dataDict = json.loads(request.data)
     customer_id = dataDict['customer_id'].lower()
     
-    user = db.User.find_one({'customer_id': customer_id},{'total_node' : 1,'security' : 1,'personal_info' : 1,'balance' : 1,'email' : 1,'d_wallet' : 1,'r_wallet' : 1,'s_wallet' : 1,'l_wallet' : 1,'total_earn' : 1})
+    user = db.User.find_one({'customer_id': customer_id},{'league' : 1,'ss_wallet' : 1,'total_node' : 1,'security' : 1,'personal_info' : 1,'balance' : 1,'email' : 1,'d_wallet' : 1,'r_wallet' : 1,'s_wallet' : 1,'l_wallet' : 1,'total_earn' : 1})
     
     if user is None:
         return json.dumps({
@@ -377,22 +377,34 @@ def get_infomation_user():
       })
     else:
 
-        level = Getlevel(customer_id)
-        if level == 0:
-            level_string = 'Member'
-        else:
-            level_string = 'Level '+str(level)
+        #level = Getlevel(customer_id)
+        # if level == 0:
+        #     level_string = 'Member'
+        # else:
+        #     level_string = 'Level '+str(level)
 
+        level_string = 'Member'
+        if user['league'] == 1:
+            level_string = 'Gold'
+        if user['league'] == 2:
+            level_string = 'Platinum'
+        if user['league'] == 3:
+            level_string = 'Ruby'
+        if user['league'] == 4:
+            level_string = 'Shapphire'
+        if user['league'] == 5:
+            level_string = 'Emerald'
 
         get_percent = db.profits.find_one({});
     
         return json.dumps({
           'security' : user['security'],
           'img_profile' : user['personal_info']['img_profile'],
-          'percent_daily' : get_percent['percent'],
+          'percent_daily' : get_percent['package1'],
           'd_wallet' : user['d_wallet'],
           'r_wallet' : user['r_wallet'],
           's_wallet' : user['s_wallet'],
+          'ss_wallet' : user['ss_wallet'],
           'l_wallet' : user['l_wallet'],
           'level' : level_string,
           'total_earn' : user['total_earn'],
@@ -916,8 +928,7 @@ def create_account(email,password_login,password_transaction,referees):
         'r_wallet' : 0,#Direct commission
         's_wallet' : 0,#System commission
         'l_wallet' : 0,#Leadership commission
-        'ss_wallet' : 0,#Share sales
-        'sf_wallet' : 0,#Share Fund
+        'ss_wallet' : 0,#Share commission
         'total_earn' : 0,
         'status' : 0,
         'balance' : {

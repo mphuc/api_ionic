@@ -35,8 +35,7 @@ class User(Document):
         'd_wallet' : float,
         'l_wallet' : float,
         'ss_wallet' : float,
-        'sf_wallet' : float,
-        
+       
         'total_earn' : float,
         
         'investment': float,

@@ -43,6 +43,28 @@ ApiCoinpayment = CoinPaymentsAPI(public_key=Config().public_key,
 __author__ = 'asdasd'
 
 apiexchange_ctrl = Blueprint('exchange', __name__, static_folder='static', template_folder='templates')
+
+def de_email(email):
+    e = email.split('@')
+    if len(e[0]) > 6:
+        x_first = str(e[0][:-6])+'******'
+    else:
+        if len(e[0]) == 6:
+            x_first = str(e[0][:-4])+'*****'
+        if len(e[0]) == 5:
+            x_first = str(e[0][:-3])+'****'
+        if len(e[0]) == 4:
+            x_first = str(e[0][:-3])+'***'
+        if len(e[0]) == 3:
+            x_first = str(e[0][:-2])+'**'
+        if len(e[0]) == 2:
+            x_first = str(e[0][:-1])+'*'
+        if len(e[0]) == 1:
+            x_first = str(e[0])
+    if  len(e[1]) > 6:
+        e_last = '******'+str(e[1][6:])
+    return str(x_first)+'@'+str(e_last)
+
 def check_password(pw_hash, password):
         return check_password_hash(pw_hash, password)
 
@@ -53,7 +75,37 @@ def price_coin_abs(amount):
         amount = '-'+str(round(abs(amount),2))
     return amount
 
-
+def children_tree (json,array,floor):
+    customer = db.User.find({'p_node': json['customer_id']}) 
+    floor = floor + 1
+    for x in customer:
+        tree = {
+            "customer_id":str(x['customer_id']),
+            "email":de_email(str(x['email'])),
+            "fl":"F"+str(floor),
+            "img_profile" : x['personal_info']['img_profile'],
+            "children" : []
+        }
+        count_f1 = db.User.find({'p_node': str(x['customer_id'])}).count()
+        sponsor = db.User.find_one({'customer_id': x['p_node']})
+        sponsor_name = ''
+        if sponsor:
+            sponsor_name = sponsor['email']
+        
+        children = {
+            "customer_id":str(x['customer_id']),
+            "creation":str(x['creation'].strftime('%H:%M %d-%m-%Y')),
+            "email":de_email(str(x['email'])),
+            "level" : str(x['level']),
+            "count_f1" : str(count_f1),
+            "floor":"F"+str(floor),
+            "sponsor" :  de_email(str(sponsor_name)),
+            "img_profile" : x['personal_info']['img_profile']
+        }
+        array.append(children)
+        json['children'].append(tree)
+        
+        children_tree (tree,array,floor)
 
 @apiexchange_ctrl.route('/submit', methods=['GET', 'POST'])
 def submit_exchange():
@@ -396,17 +448,16 @@ def get_number_dialing():
     dataDict = json.loads(request.data)
     customer_id = dataDict['customer_id']
     
-    history = db.dialings.find({'$and' : [{'customer_id': customer_id}]}).sort([("date_added", -1)])
-    #.sort("date_added", -1)
+    now = datetime.today()
 
-    array = []
-    number_dialing = 0
-    for item in history:
-      if int(item['status']) == 0:
-        number_dialing = number_dialing + 1
-      
+    number_dialing = db.dialings.find({'$and' : [{'customer_id': customer_id},{'status' : 0},{"date_finish": { "$lte": now }}]}).count()
+
+    number_dialing_pending = db.dialings.find({'$and' : [{'customer_id': customer_id},{'status' : 0},{"date_finish": { "$gt": now }}]}).count()
+
+   
     return json.dumps({
-      'number_dialing' : number_dialing
+      'number_dialing' : number_dialing,
+      'number_dialing_pending' : number_dialing_pending
     })
 
 @apiexchange_ctrl.route('/update-number-dialing', methods=['GET', 'POST'])
@@ -416,11 +467,12 @@ def update_number_dialing():
     customer_id = dataDict['customer_id']
     number_random = dataDict['number_random']
 
-    history = db.dialings.find_one({'$and' : [{'customer_id': customer_id},{'status' : 0}]})
+    now = datetime.today()
+    history = db.dialings.find_one({'$and' : [{'customer_id': customer_id},{'status' : 0},{"date_finish": { "$lte": now }}]})
     #.sort("date_added", -1)
     if history is not None:
 
-      db.dialings.update({'_id': ObjectId(history['_id'])},{'$set' : {'amount_coin' : number_random,'status' :1}})
+      db.dialings.update({'_id': ObjectId(history['_id'])},{'$set' : {'amount_coin' : number_random,'status' :1,'date_added' : datetime.utcnow()}})
       customer = db.users.find_one({'customer_id': customer_id})
 
       coin_balance = float(customer['balance']['coin']['available'])
@@ -442,7 +494,9 @@ def get_history_profit():
     start = dataDict['start']
     limit = dataDict['limit']
     
-    history = db.historys.find({'$and' : [{'uid': customer_id},{'type': types}]}).sort([("date_added", -1)]).limit(limit).skip(start)
+    date_search = datetime.utcnow() - timedelta(days=5)
+
+    history = db.historys.find({'$and' : [{'uid': customer_id},{'type': types},{"date_added": { "$gte": date_search }}]}).sort([("date_added", -1)]).limit(limit).skip(start)
     #.sort("date_added", -1)
 
     array = []
@@ -531,22 +585,39 @@ def get_member():
 
     dataDict = json.loads(request.data)
     customer_id = dataDict['customer_id']
-    start = dataDict['start']
-    limit = dataDict['limit']
-    member = db.users.find({'p_node': customer_id}).sort([("creation", -1)]).limit(limit).skip(start)
+    # start = dataDict['start']
+    # limit = dataDict['limit']
+    # member = db.users.find({'p_node': customer_id}).sort([("creation", -1)]).limit(limit).skip(start)
 
     #.sort("date_added", -1)
-
+    
+    user = db.User.find_one({'customer_id': customer_id})
+    tree = {
+        "customer_id":str(user['customer_id']),
+        "creation":str(user['creation'].strftime('%H:%M %d-%m-%Y')),
+        "fl":0,
+        "children" : []
+    }
     array = []
-    for item in member:
-      array.append({
-        "customer_id" : item['customer_id'],
-        "email" : item['email'],
-        "level" : item['level'],
-        "img_profile" : item['personal_info']['img_profile'],
-        "date_added" : (item['creation']).strftime('%H:%M %d-%m-%Y')
-      })
-    return json.dumps(array)
+    children_tree(tree,array,0)
+    
+    # array = []
+    # for item in array:
+    #   print item
+    #   array.append({
+    #     "customer_id" : item['customer_id'],
+    #     "email" : de_email(item['email']),
+    #     "level" : item['level'],
+    #     "img_profile" : item['personal_info']['img_profile'],
+    #     "date_added" : (item['creation']).strftime('%H:%M %d-%m-%Y')
+    #   })
+    array = sorted(array, key=lambda k: k['floor']) 
+    #array.sort(key='F1',reverse=True)
+
+    return json.dumps({
+      'list_member':array,
+      'count_f1' : db.users.find({'p_node': customer_id}).count()
+    })
 
 @apiexchange_ctrl.route('/get-infomation-user', methods=['GET', 'POST'])
 def get_infomation_user():

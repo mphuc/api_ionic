@@ -17,7 +17,8 @@ class Dialing(Document):
         'amount_coin': float,
         'currency': unicode,
         'date_added' : datetime.datetime,
-        'status': int
+        'status': int,
+        'date_finish' : : datetime.datetime
     }
     use_dot_notation = True
 

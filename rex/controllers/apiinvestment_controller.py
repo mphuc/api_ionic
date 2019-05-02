@@ -45,16 +45,44 @@ __author__ = 'asdasd'
 apiinvestment_ctrl = Blueprint('investment', __name__, static_folder='static', template_folder='templates')
 def check_password(pw_hash, password):
         return check_password_hash(pw_hash, password)
+
+
+def de_email(email):
+    e = email.split('@')
+    if len(e[0]) > 6:
+        x_first = str(e[0][:-6])+'******'
+    else:
+        if len(e[0]) == 6:
+            x_first = str(e[0][:-4])+'*****'
+        if len(e[0]) == 5:
+            x_first = str(e[0][:-3])+'****'
+        if len(e[0]) == 4:
+            x_first = str(e[0][:-3])+'***'
+        if len(e[0]) == 3:
+            x_first = str(e[0][:-2])+'**'
+        if len(e[0]) == 2:
+            x_first = str(e[0][:-1])+'*'
+        if len(e[0]) == 1:
+            x_first = str(e[0])
+    if  len(e[1]) > 6:
+        e_last = '******'+str(e[1][6:])
+    return str(x_first)+'@'+str(e_last)
+
+
+
 @apiinvestment_ctrl.route('/testinvest', methods=['GET', 'POST'])
 def testinvest():
-    Update_level_all_user()
-    time.sleep( 5 )
-    caculator_profitDaily()
-
+    
+    # Update_level_all_user()
+    # time.sleep( 1 )
+    # caculator_profitDaily()
+    Share_commission(1000000)
     return json.dumps({
-        'status': 'complete' 
+        'status': 'array' 
         
     })
+
+
 
 @apiinvestment_ctrl.route('/active-package', methods=['GET', 'POST'])
 def active_package():
@@ -112,6 +140,17 @@ def active_package():
 
                     db.users.update({ "customer_id" : customer_id }, { '$set': { string_query: float(new_balance_sub),'investment' : new_invest_ss} })
                     
+
+                    if float(amount_usd) >= 500 and float(amount_usd) < 3000:
+                        package_string = 'package1'
+                        number_dialing = 0
+                    if float(amount_usd) >= 3000 and float(amount_usd) < 5000:
+                        package_string = 'package2'
+                        number_dialing = 2
+                    if float(amount_usd) >= 5000:
+                        package_string = 'package3'
+                        number_dialing = 6
+
                     #save lich su
                     data_investment = {
                         'uid' : customer_id,
@@ -119,6 +158,7 @@ def active_package():
                         'username' : user['email'],
                         'amount_usd' : float(amount_usd),
                         'package': round(float(amount),8),
+                        'package_string' : package_string,
                         'status' : 1,
                         'date_added' : datetime.utcnow(),
                         'amount_frofit' : 0,
@@ -132,21 +172,24 @@ def active_package():
                     db.investments.insert(data_investment)
 
                     #save dialing
-                    data_dialing = {
-                        'customer_id' : customer_id,
-                        'username' : user['email'],
-                        'package': round(float(amount),8),
-                        'status' : 0,
-                        'date_added' : datetime.utcnow(),
-                        'amount_coin' : 0,
-                        'currency' : currency
-                    }
-                    db.dialings.insert(data_dialing)
+                    for x in range(number_dialing):
+                        num_day = int(x)*30
+                        data_dialing = {
+                            'customer_id' : customer_id,
+                            'username' : user['email'],
+                            'package': round(float(amount),8),
+                            'status' : 0,
+                            'date_added' : datetime.utcnow(),
+                            'amount_coin' : 0,
+                            'currency' : currency,
+                            'date_finish' : datetime.utcnow()+ timedelta(days=num_day)
+                        }
+                        db.dialings.insert(data_dialing)
 
 
-                    FnRefferalProgram(customer_id, amount, currency)
+                    FnRefferalProgram(customer_id, amount_usd,amount,currency)
 
-                    TotalnodeAmount(customer_id, amount,currency)
+                    TotalnodeAmount(customer_id, amount_usd)
 
                     return json.dumps({
                         'status': 'complete', 
@@ -155,12 +198,12 @@ def active_package():
                 else:
                     return json.dumps({
                         'status': 'error',
-                        'message': 'The minimum amount of ai-trade is '+str(round(500/float(price_atlcoin),8))+' '+currency 
+                        'message': 'The minimum amount of Ai-Bald Eagle is '+str(round(500/float(price_atlcoin),8))+' '+currency 
                     })
             else:
                 return json.dumps({
                     'status': 'error',
-                    'message': 'Account balance is not enough to Ai-trade' 
+                    'message': 'Account balance is not enough to Ai-Bald Eagle' 
                 })
 
         else:
@@ -483,74 +526,41 @@ def get_history_payment():
       })
     return json.dumps(array)
 
-def FnRefferalProgram(customer_id, amount_invest, currency):
+def FnRefferalProgram(customer_id, amount_usd,amount_invest,currency):
     customers = db.users.find_one({"customer_id" : customer_id })
     if customers['p_node'] != '':
         customers_pnode = db.users.find_one({"customer_id" : customers['p_node'] })
 
         if float(customers_pnode['investment'] > 0):
             ticker = db.tickers.find_one({})
-
-            if currency == 'BTC': 
-                price_atlcoin = ticker['btc_usd']
-                string_query = 'balance.bitcoin.available'
-                val_balance = customers_pnode['balance']['bitcoin']['available']
-            if currency == 'ETH':
-                price_atlcoin = ticker['eth_usd']
-                string_query = 'balance.ethereum.available'
-                val_balance = customers_pnode['balance']['ethereum']['available']
-            if currency == 'LTC':
-                price_atlcoin = ticker['ltc_usd']
-                string_query = 'balance.litecoin.available'
-                val_balance = customers_pnode['balance']['litecoin']['available']
-            if currency == 'XRP':
-                price_atlcoin = ticker['xrp_usd']
-                string_query = 'balance.ripple.available'
-                val_balance = customers_pnode['balance']['ripple']['available']
-            if currency == 'USDT':
-                price_atlcoin = ticker['usdt_usd']
-                string_query = 'balance.tether.available'
-                val_balance = customers_pnode['balance']['tether']['available']
-            if currency == 'DASH':
-                price_atlcoin = ticker['dash_usd']
-                string_query = 'balance.dash.available'
-                val_balance = customers_pnode['balance']['dash']['available']
-            if currency == 'EOS':
-                price_atlcoin = ticker['eso_usd']
-                string_query = 'balance.eos.available'
-                val_balance = customers_pnode['balance']['eos']['available']
-            if currency == 'ASIC':
-                price_atlcoin = ticker['coin_usd']
-                string_query = 'balance.coin.available'
-                val_balance = customers_pnode['balance']['coin']['available']
-
-           
+            price_coin = ticker['coin_usd']
             
-            commission = float(price_atlcoin)*float(amount_invest)*0.03
+            
+            commission = round((float(amount_usd)/float(price_coin)*0.03),8)
 
             r_wallet = float(customers_pnode['r_wallet'])
-            new_r_wallet = float(r_wallet) + float(commission)
-            new_r_wallet = float(new_r_wallet)
+            new_r_wallet = float(r_wallet) + (float(commission)*100000000)
+            new_r_wallet = round(float(new_r_wallet),8)
 
             total_earn = float(customers_pnode['total_earn'])
-            new_total_earn = float(total_earn) + float(commission)
-            new_total_earn = float(new_total_earn)
+            new_total_earn = float(total_earn) + (float(commission)*100000000)
+            new_total_earn = round(float(new_total_earn),8)
 
-            balance_wallet = float(val_balance)
-            new_balance_wallet = float(balance_wallet) + (float(amount_invest)*0.03*100000000)
+            balance_wallet = float(customers_pnode['balance']['coin']['available'])
+            new_balance_wallet = float(balance_wallet) + (float(commission)*100000000)
             new_balance_wallet = round(float(new_balance_wallet),8)
 
-            db.users.update({ "_id" : ObjectId(customers_pnode['_id']) }, { '$set': {string_query : new_balance_wallet,'total_earn': new_total_earn, 'r_wallet' :new_r_wallet } })
+            db.users.update({ "_id" : ObjectId(customers_pnode['_id']) }, { '$set': {'balance.coin.available' : new_balance_wallet,'total_earn': new_total_earn, 'r_wallet' :new_r_wallet } })
             
-            detail = str(customers['email']) + ' Ai-trade '+ str(amount_invest) + ' ' + str(currency)
-            SaveHistory(customers_pnode['customer_id'],customers_pnode['email'],detail, float(amount_invest)*0.03, currency, 'Direct commission')
+            detail = de_email(str(customers['email'])) + ' Ai-Bald Eagle '+ str(amount_invest) + ' ' + str(currency)
+            SaveHistory(customers_pnode['customer_id'],customers_pnode['email'],detail, float(commission),'ASIC', 'Direct commission',customers['email'])
    
     return True
 
 def caculator_profitDaily():
     
     get_percent = db.profits.find_one({});
-    percent = get_percent['percent']
+    
 
     get_invest = db.investments.find({ "status": 1});
     ticker = db.tickers.find_one({})
@@ -594,30 +604,39 @@ def caculator_profitDaily():
                 val_balance = customer['balance']['coin']['available']
 
 
-            commission = float(x['package'])*float(percent)*float(price_atlcoin)/100
+            if x['package_string'] == 'package1':
+                percent = get_percent['package1']
+            if x['package_string'] == 'package2':
+                percent = get_percent['package2']
+            if x['package_string'] == 'package3':
+                percent = get_percent['package3']
+
+            convert_usd = float(x['package'])*float(price_atlcoin)
+            convert_coin = float(convert_usd)/ticker['coin_usd']
+
+            commission = round((float(convert_coin)*float(percent)*0.9/100),8)
 
             d_wallet = float(customer['d_wallet'])
-            new_d_wallet = float(d_wallet) + float(commission)
-            new_d_wallet = float(new_d_wallet)
+            new_d_wallet = float(d_wallet) + (float(commission)*100000000)
+            new_d_wallet = round(float(new_d_wallet),8)
 
             total_earn = float(customer['total_earn'])
-            new_total_earn = float(total_earn) + float(commission)
-            new_total_earn = float(new_total_earn)
+            new_total_earn = float(total_earn) + (float(commission)*100000000)
+            new_total_earn = round(float(new_total_earn),9)
 
-            balance_wallet = float(val_balance)
-
-            new_balance_wallet = float(balance_wallet) + (float(x['package'])*float(percent)*1000000)
+            balance_wallet = float(customer['balance']['coin']['available'])
+            new_balance_wallet = float(balance_wallet) + (float(commission)*100000000)
             new_balance_wallet = round(float(new_balance_wallet),8)
 
-            db.users.update({ "_id" : ObjectId(customer['_id']) }, { '$set': {string_query : new_balance_wallet,'total_earn': new_total_earn, 'd_wallet' :new_d_wallet } })
+            db.users.update({ "_id" : ObjectId(customer['_id']) }, { '$set': {'balance.coin.available' : new_balance_wallet,'total_earn': new_total_earn, 'd_wallet' :new_d_wallet } })
             
-            detail = str(percent) + '% - Ai-trade '+ str(x['package']) + ' ' + str( x['currency'])
-            SaveHistory(customer['customer_id'],customer['email'],detail, round((float(x['package'])*float(percent)/100),8), x['currency'], 'Profit day')
+            detail = str(percent) + '% - Ai-Bald Eagle '+ str(x['package']) + ' ' + str( x['currency'])
+            SaveHistory(customer['customer_id'],customer['email'],detail, commission, x['currency'], 'Profit day',customer['email'])
             
 
-            Systemcommission(customer['customer_id'],round((float(x['package'])*float(percent)/100),8),x['currency'])
+            Systemcommission(customer['customer_id'],commission,x['currency'])
 
-            Leadership_commission(customer['customer_id'],round((float(x['package'])*float(percent)/100),8),x['currency'])
+            Leadership_commission(customer['customer_id'],commission,x['currency'])
 
     return True
 
@@ -672,60 +691,24 @@ def Systemcommission(customer_id,amount_receive,currency):
                     percent_receve = 10
                 if int(percent_receve) > 0:
                     
-                    if currency == 'BTC': 
-                        price_atlcoin = ticker['btc_usd']
-                        string_query = 'balance.bitcoin.available'
-                        val_balance = customers['balance']['bitcoin']['available']
-                    if currency == 'ETH':
-                        price_atlcoin = ticker['eth_usd']
-                        string_query = 'balance.ethereum.available'
-                        val_balance = customers['balance']['ethereum']['available']
-                    if currency == 'LTC':
-                        price_atlcoin = ticker['ltc_usd']
-                        string_query = 'balance.litecoin.available'
-                        val_balance = customers['balance']['litecoin']['available']
-                    if currency == 'XRP':
-                        price_atlcoin = ticker['xrp_usd']
-                        string_query = 'balance.ripple.available'
-                        val_balance = customers['balance']['ripple']['available']
-                    if currency == 'USDT':
-                        price_atlcoin = ticker['usdt_usd']
-                        string_query = 'balance.tether.available'
-                        val_balance = customers['balance']['tether']['available']
-                    if currency == 'DASH':
-                        price_atlcoin = ticker['dash_usd']
-                        string_query = 'balance.dash.available'
-                        val_balance = customers['balance']['dash']['available']
-                    if currency == 'EOS':
-                        price_atlcoin = ticker['eso_usd']
-                        string_query = 'balance.eos.available'
-                        val_balance = customers['balance']['eos']['available']
-                    if currency == 'ASIC':
-                        price_atlcoin = ticker['coin_usd']
-                        string_query = 'balance.coin.available'
-                        val_balance = customers['balance']['coin']['available']
-
-                    
-
-                    commission = float(amount_receive)*float(percent_receve)*float(price_atlcoin)*0.9/100
+                    commission = float(amount_receive)*float(percent_receve)*0.9/100
 
                     s_wallet = float(customers['s_wallet'])
-                    new_s_wallet = float(s_wallet) + float(commission)
-                    new_s_wallet = float(new_s_wallet)
+                    new_s_wallet = float(s_wallet) + (float(commission)*100000000)
+                    new_s_wallet = round(float(new_s_wallet),8)
 
                     total_earn = float(customers['total_earn'])
-                    new_total_earn = float(total_earn) + float(commission)
-                    new_total_earn = float(new_total_earn)
+                    new_total_earn = float(total_earn) + (float(commission)*100000000)
+                    new_total_earn = round(float(new_total_earn),8)
 
-                    balance_wallet = float(val_balance)
-
-                    new_balance_wallet = float(balance_wallet) + (float(amount_receive)*float(percent_receve)*0.9*1000000)
+                    balance_wallet = float(customers['balance']['coin']['available'])
+                    new_balance_wallet = float(balance_wallet) + (float(commission)*100000000)
                     new_balance_wallet = round(float(new_balance_wallet),8)
 
-                    db.users.update({ "_id" : ObjectId(customers['_id']) }, { '$set': {string_query : new_balance_wallet,'total_earn': new_total_earn, 's_wallet' :new_s_wallet } })
+                    db.users.update({ "_id" : ObjectId(customers['_id']) }, { '$set': {'balance.coin.available' : new_balance_wallet,'total_earn': new_total_earn, 's_wallet' :new_s_wallet } })
                     
-                    detail = 'F'+str(i)+' '+ str(email_customer_receive) + ' received ' + str(amount_receive)+ ' ' +str( currency)
-                    SaveHistory(customers['customer_id'],customers['email'],detail, round((float(amount_receive)*float(percent_receve)*0.9/100),8), currency, 'System commission')
+                    detail = 'F'+str(i)+' '+ de_email(str(email_customer_receive)) + ' received ' + str(amount_receive)+ ' ASIC'
+                    SaveHistory(customers['customer_id'],customers['email'],detail, round(commission,8), 'ASIC', 'System commission',str(email_customer_receive))
         else:
             break
     return True
@@ -815,7 +798,7 @@ def Getlevel(customer_id):
         level = customer['level']
     return level
     
-def SaveHistory(uid, username,detail, amount, currency,types):
+def SaveHistory(uid, username,detail, amount, currency,types,email_link):
     data_history = {
         'uid':  uid,
         'username': username,
@@ -823,37 +806,15 @@ def SaveHistory(uid, username,detail, amount, currency,types):
         'amount': round(amount,8),
         'currency' :  currency,
         'type' : types,
-        'date_added' : datetime.utcnow()
+        'date_added' : datetime.utcnow(),
+        'email_link' : email_link
     }
     db.historys.insert(data_history)
     return True
 
-def TotalnodeAmount(user_id, amount_invest,currency):
-    ticker = db.tickers.find_one({})
+def TotalnodeAmount(user_id, amount_invest_usd):
+    
     customer_ml = db.users.find_one({"customer_id" : user_id })
-    if currency == 'BTC': 
-        price_currency = ticker['btc_usd']
-        string_currency = 'btc_balance'
-    if currency == 'ETH':
-        price_currency = ticker['eth_usd']
-        string_currency = 'eth_balance'
-    if currency == 'LTC':
-        price_currency = ticker['ltc_usd']
-        string_currency = 'ltc_balance'
-    if currency == 'XRP':
-        price_currency = ticker['xrp_usd']
-        string_currency = 'xrp_balance'
-    if currency == 'USDT':
-        price_currency = ticker['usdt_usd']
-        string_currency = 'usdt_balance'
-    if currency == 'EOS':
-        price_currency = ticker['eos_usd']
-        string_currency = 'eos_usd'
-    if currency == 'DASH':
-        price_currency = ticker['dash_usd']
-        string_currency = 'dash_balance'
-
-    amount_invest_usd = float(amount_invest)*float(price_currency)
 
     if customer_ml['p_node'] != '':
         while (True):
@@ -870,156 +831,80 @@ def TotalnodeAmount(user_id, amount_invest,currency):
                 break
     return True
 
-def Commisson_league_1(customer_id,amount_receive,currency,i,price_currency,email_customer_receive):
+def Commisson_league_1(customer_id,amount_receive,i,email_customer_receive):
     if (i > 1):
         customers = db.users.find_one({"customer_id" : customer_id })
         if customers is not None:
             percent_receve = 10
-            commission = float(amount_receive)*float(percent_receve)*float(price_currency)/100
+            commission = float(amount_receive)*float(percent_receve)/100
 
             l_wallet = float(customers['l_wallet'])
-            new_l_wallet = float(l_wallet) + float(commission)
-            new_l_wallet = float(new_l_wallet)
+            new_l_wallet = float(l_wallet) + float(commission)*100000000
+            new_l_wallet = round(float(new_l_wallet),8)
 
             total_earn = float(customers['total_earn'])
-            new_total_earn = float(total_earn) + float(commission)
-            new_total_earn = float(new_total_earn)
+            new_total_earn = float(total_earn) + float(commission)*100000000
+            new_total_earn = round(float(new_total_earn),8)
 
-            if currency == 'BTC': 
-                string_query = 'balance.bitcoin.available'
-                val_balance = customers['balance']['bitcoin']['available']
-            if currency == 'ETH':
-                string_query = 'balance.ethereum.available'
-                val_balance = customers['balance']['ethereum']['available']
-            if currency == 'LTC':
-                string_query = 'balance.litecoin.available'
-                val_balance = customers['balance']['litecoin']['available']
-            if currency == 'XRP':
-                string_query = 'balance.ripple.available'
-                val_balance = customers['balance']['ripple']['available']
-            if currency == 'USDT':
-                string_query = 'balance.tether.available'
-                val_balance = customers['balance']['tether']['available']
-            if currency == 'DASH':
-                string_query = 'balance.dash.available'
-                val_balance = customers['balance']['dash']['available']
-            if currency == 'EOS':
-                string_query = 'balance.eos.available'
-                val_balance = customers['balance']['eos']['available']
-            if currency == 'ASIC':
-                string_query = 'balance.coin.available'
-                val_balance = customers['balance']['coin']['available']
-
-
-            new_balance_wallet = float(val_balance) + (float(amount_receive)*float(percent_receve)*1000000)
+            new_balance_wallet = customers['balance']['coin']['available'] + float(commission)*100000000
             new_balance_wallet = round(float(new_balance_wallet),8)
 
-            db.users.update({ "_id" : ObjectId(customers['_id']) }, { '$set': {string_query : new_balance_wallet,'total_earn': new_total_earn, 'l_wallet' :new_l_wallet } })
+            db.users.update({ "_id" : ObjectId(customers['_id']) }, { '$set': {'balance.coin.available' : new_balance_wallet,'total_earn': new_total_earn, 'l_wallet' :new_l_wallet } })
             
-            detail = 'Receive from ID: '+ str(email_customer_receive) + ' - F'+str(i)
-            SaveHistory(customers['customer_id'],customers['email'],detail, round((float(amount_receive)*float(percent_receve)/100),8), currency, 'Leader commission')
+            detail = 'Receive from ID: '+ de_email(str(email_customer_receive)) + ' - F'+str(i)
+            SaveHistory(customers['customer_id'],customers['email'],detail, round(commission,8), 'ASIC', 'Leader commission',str(email_customer_receive))
     return True
-def Commisson_league_2(customer_id,amount_receive,currency,i,price_currency,email_customer_receive):
+def Commisson_league_2(customer_id,amount_receive,i,email_customer_receive):
     if (i == 1):
         customers = db.users.find_one({"customer_id" : customer_id })
         if customers is not None:
             percent_receve = 10
-            commission = float(amount_receive)*float(percent_receve)*float(price_currency)/100
+            commission = float(amount_receive)*float(percent_receve)/100
 
             l_wallet = float(customers['l_wallet'])
-            new_l_wallet = float(l_wallet) + float(commission)
-            new_l_wallet = float(new_l_wallet)
+            new_l_wallet = float(l_wallet) + float(commission)*100000000
+            new_l_wallet = round(float(new_l_wallet),8)
 
             total_earn = float(customers['total_earn'])
-            new_total_earn = float(total_earn) + float(commission)
-            new_total_earn = float(new_total_earn)
+            new_total_earn = float(total_earn) + float(commission)*100000000
+            new_total_earn = round(float(new_total_earn),8)
 
-            if currency == 'BTC': 
-                string_query = 'balance.bitcoin.available'
-                val_balance = customers['balance']['bitcoin']['available']
-            if currency == 'ETH':
-                string_query = 'balance.ethereum.available'
-                val_balance = customers['balance']['ethereum']['available']
-            if currency == 'LTC':
-                string_query = 'balance.litecoin.available'
-                val_balance = customers['balance']['litecoin']['available']
-            if currency == 'XRP':
-                string_query = 'balance.ripple.available'
-                val_balance = customers['balance']['ripple']['available']
-            if currency == 'USDT':
-                string_query = 'balance.tether.available'
-                val_balance = customers['balance']['tether']['available']
-            if currency == 'DASH':
-                string_query = 'balance.dash.available'
-                val_balance = customers['balance']['dash']['available']
-            if currency == 'EOS':
-                string_query = 'balance.eos.available'
-                val_balance = customers['balance']['eos']['available']
-            if currency == 'ASIC':
-                string_query = 'balance.coin.available'
-                val_balance = customers['balance']['coin']['available']
-
-
-            new_balance_wallet = float(val_balance) + (float(amount_receive)*float(percent_receve)*1000000)
+            new_balance_wallet = customers['balance']['coin']['available'] + float(commission)*100000000
             new_balance_wallet = round(float(new_balance_wallet),8)
 
-            db.users.update({ "_id" : ObjectId(customers['_id']) }, { '$set': {string_query : new_balance_wallet,'total_earn': new_total_earn, 'l_wallet' :new_l_wallet } })
+            db.users.update({ "_id" : ObjectId(customers['_id']) }, { '$set': {'balance.coin.available' : new_balance_wallet,'total_earn': new_total_earn, 'l_wallet' :new_l_wallet } })
             
-            detail = 'Receive from ID: '+ str(email_customer_receive) + ' - F'+str(i)
-            SaveHistory(customers['customer_id'],customers['email'],detail, round((float(amount_receive)*float(percent_receve)/100),8), currency, 'Leader commission')
+            detail = 'Receive from ID: '+ de_email(str(email_customer_receive)) + ' - F'+str(i)
+            SaveHistory(customers['customer_id'],customers['email'],detail, round(commission,8), 'ASIC', 'Leader commission',str(email_customer_receive))
     return True
 
-def Commisson_league_3(customer_id,amount_receive,currency,i,price_currency,email_customer_receive):
+def Commisson_league_3(customer_id,amount_receive,i,email_customer_receive):
     if (i == 1):
         customers = db.users.find_one({"customer_id" : customer_id })
         if customers is not None:
             percent_receve = 20
-            commission = float(amount_receive)*float(percent_receve)*float(price_currency)/100
+
+            commission = float(amount_receive)*float(percent_receve)/100
 
             l_wallet = float(customers['l_wallet'])
-            new_l_wallet = float(l_wallet) + float(commission)
-            new_l_wallet = float(new_l_wallet)
+            new_l_wallet = float(l_wallet) + float(commission)*100000000
+            new_l_wallet = round(float(new_l_wallet),8)
 
             total_earn = float(customers['total_earn'])
-            new_total_earn = float(total_earn) + float(commission)
-            new_total_earn = float(new_total_earn)
+            new_total_earn = float(total_earn) + float(commission)*100000000
+            new_total_earn = round(float(new_total_earn),8)
 
-            if currency == 'BTC': 
-                string_query = 'balance.bitcoin.available'
-                val_balance = customers['balance']['bitcoin']['available']
-            if currency == 'ETH':
-                string_query = 'balance.ethereum.available'
-                val_balance = customers['balance']['ethereum']['available']
-            if currency == 'LTC':
-                string_query = 'balance.litecoin.available'
-                val_balance = customers['balance']['litecoin']['available']
-            if currency == 'XRP':
-                string_query = 'balance.ripple.available'
-                val_balance = customers['balance']['ripple']['available']
-            if currency == 'USDT':
-                string_query = 'balance.tether.available'
-                val_balance = customers['balance']['tether']['available']
-            if currency == 'DASH':
-                string_query = 'balance.dash.available'
-                val_balance = customers['balance']['dash']['available']
-            if currency == 'EOS':
-                string_query = 'balance.eos.available'
-                val_balance = customers['balance']['eos']['available']
-            if currency == 'ASIC':
-                string_query = 'balance.coin.available'
-                val_balance = customers['balance']['coin']['available']
-
-
-            new_balance_wallet = float(val_balance) + (float(amount_receive)*float(percent_receve)*1000000)
+            new_balance_wallet = customers['balance']['coin']['available'] + float(commission)*100000000
             new_balance_wallet = round(float(new_balance_wallet),8)
 
-            db.users.update({ "_id" : ObjectId(customers['_id']) }, { '$set': {string_query : new_balance_wallet,'total_earn': new_total_earn, 'l_wallet' :new_l_wallet } })
+            db.users.update({ "_id" : ObjectId(customers['_id']) }, { '$set': {'balance.coin.available' : new_balance_wallet,'total_earn': new_total_earn, 'l_wallet' :new_l_wallet } })
             
-            detail = 'Receive from ID: '+ str(email_customer_receive) + ' - F'+str(i)
-            SaveHistory(customers['customer_id'],customers['email'],detail, round((float(amount_receive)*float(percent_receve)/100),8), currency, 'Leader commission')
+            detail = 'Receive from ID: '+ de_email(str(email_customer_receive)) + ' - F'+str(i)
+            SaveHistory(customers['customer_id'],customers['email'],detail, round(commission,8), 'ASIC', 'Leader commission',str(email_customer_receive))
+            
     return True
 
-def Commisson_league_4(customer_id,amount_receive,currency,i,price_currency,email_customer_receive):
+def Commisson_league_4(customer_id,amount_receive,i,email_customer_receive):
     if i == 1:
         percent_receve = 30
     else:
@@ -1027,53 +912,27 @@ def Commisson_league_4(customer_id,amount_receive,currency,i,price_currency,emai
     customers = db.users.find_one({"customer_id" : customer_id })
     if customers is not None:
         
-        commission = float(amount_receive)*float(percent_receve)*float(price_currency)/100
+        commission = float(amount_receive)*float(percent_receve)/100
 
         l_wallet = float(customers['l_wallet'])
-        new_l_wallet = float(l_wallet) + float(commission)
-        new_l_wallet = float(new_l_wallet)
+        new_l_wallet = float(l_wallet) + float(commission)*100000000
+        new_l_wallet = round(float(new_l_wallet),8)
 
         total_earn = float(customers['total_earn'])
-        new_total_earn = float(total_earn) + float(commission)
-        new_total_earn = float(new_total_earn)
+        new_total_earn = float(total_earn) + float(commission)*100000000
+        new_total_earn = round(float(new_total_earn),8)
 
-        if currency == 'BTC': 
-            string_query = 'balance.bitcoin.available'
-            val_balance = customers['balance']['bitcoin']['available']
-        if currency == 'ETH':
-            string_query = 'balance.ethereum.available'
-            val_balance = customers['balance']['ethereum']['available']
-        if currency == 'LTC':
-            string_query = 'balance.litecoin.available'
-            val_balance = customers['balance']['litecoin']['available']
-        if currency == 'XRP':
-            string_query = 'balance.ripple.available'
-            val_balance = customers['balance']['ripple']['available']
-        if currency == 'USDT':
-            string_query = 'balance.tether.available'
-            val_balance = customers['balance']['tether']['available']
-        if currency == 'DASH':
-            string_query = 'balance.dash.available'
-            val_balance = customers['balance']['dash']['available']
-        if currency == 'EOS':
-            string_query = 'balance.eos.available'
-            val_balance = customers['balance']['eos']['available']
-        if currency == 'ASIC':
-            string_query = 'balance.coin.available'
-            val_balance = customers['balance']['coin']['available']
-
-
-        new_balance_wallet = float(val_balance) + (float(amount_receive)*float(percent_receve)*1000000)
+        new_balance_wallet = customers['balance']['coin']['available'] + float(commission)*100000000
         new_balance_wallet = round(float(new_balance_wallet),8)
 
-        db.users.update({ "_id" : ObjectId(customers['_id']) }, { '$set': {string_query : new_balance_wallet,'total_earn': new_total_earn, 'l_wallet' :new_l_wallet } })
+        db.users.update({ "_id" : ObjectId(customers['_id']) }, { '$set': {'balance.coin.available' : new_balance_wallet,'total_earn': new_total_earn, 'l_wallet' :new_l_wallet } })
         
-        detail = 'Receive from ID: '+ str(email_customer_receive) + ' - F'+str(i)
-        SaveHistory(customers['customer_id'],customers['email'],detail, round((float(amount_receive)*float(percent_receve)/100),8), currency, 'Leader commission')
+        detail = 'Receive from ID: '+ de_email(str(email_customer_receive)) + ' - F'+str(i)
+        SaveHistory(customers['customer_id'],customers['email'],detail, round(commission,8), 'ASIC', 'Leader commission',str(email_customer_receive))
 
     return True
 
-def Commisson_league_5(customer_id,amount_receive,currency,i,price_currency,email_customer_receive):
+def Commisson_league_5(customer_id,amount_receive,i,email_customer_receive):
     if i == 1:
         percent_receve = 40
     else:
@@ -1081,53 +940,27 @@ def Commisson_league_5(customer_id,amount_receive,currency,i,price_currency,emai
     customers = db.users.find_one({"customer_id" : customer_id })
     if customers is not None:
         
-        commission = float(amount_receive)*float(percent_receve)*float(price_currency)/100
+        commission = float(amount_receive)*float(percent_receve)/100
 
         l_wallet = float(customers['l_wallet'])
-        new_l_wallet = float(l_wallet) + float(commission)
-        new_l_wallet = float(new_l_wallet)
+        new_l_wallet = float(l_wallet) + float(commission)*100000000
+        new_l_wallet = round(float(new_l_wallet),8)
 
         total_earn = float(customers['total_earn'])
-        new_total_earn = float(total_earn) + float(commission)
-        new_total_earn = float(new_total_earn)
+        new_total_earn = float(total_earn) + float(commission)*100000000
+        new_total_earn = round(float(new_total_earn),8)
 
-        if currency == 'BTC': 
-            string_query = 'balance.bitcoin.available'
-            val_balance = customers['balance']['bitcoin']['available']
-        if currency == 'ETH':
-            string_query = 'balance.ethereum.available'
-            val_balance = customers['balance']['ethereum']['available']
-        if currency == 'LTC':
-            string_query = 'balance.litecoin.available'
-            val_balance = customers['balance']['litecoin']['available']
-        if currency == 'XRP':
-            string_query = 'balance.ripple.available'
-            val_balance = customers['balance']['ripple']['available']
-        if currency == 'USDT':
-            string_query = 'balance.tether.available'
-            val_balance = customers['balance']['tether']['available']
-        if currency == 'DASH':
-            string_query = 'balance.dash.available'
-            val_balance = customers['balance']['dash']['available']
-        if currency == 'EOS':
-            string_query = 'balance.eos.available'
-            val_balance = customers['balance']['eos']['available']
-        if currency == 'ASIC':
-            string_query = 'balance.coin.available'
-            val_balance = customers['balance']['coin']['available']
-
-
-        new_balance_wallet = float(val_balance) + (float(amount_receive)*float(percent_receve)*1000000)
+        new_balance_wallet = customers['balance']['coin']['available'] + float(commission)*100000000
         new_balance_wallet = round(float(new_balance_wallet),8)
 
-        db.users.update({ "_id" : ObjectId(customers['_id']) }, { '$set': {string_query : new_balance_wallet,'total_earn': new_total_earn, 'l_wallet' :new_l_wallet } })
+        db.users.update({ "_id" : ObjectId(customers['_id']) }, { '$set': {'balance.coin.available' : new_balance_wallet,'total_earn': new_total_earn, 'l_wallet' :new_l_wallet } })
         
-        detail = 'Receive from ID: '+ str(email_customer_receive) + ' - F'+str(i)
-        SaveHistory(customers['customer_id'],customers['email'],detail, round((float(amount_receive)*float(percent_receve)/100),8), currency, 'Leader commission')
+        detail = 'Receive from ID: '+ de_email(str(email_customer_receive)) + ' - F'+str(i)
+        SaveHistory(customers['customer_id'],customers['email'],detail, round(commission,8), 'ASIC', 'Leader commission',str(email_customer_receive))
 
     return True
 
-def Commisson_league_6(customer_id,amount_receive,currency,i,price_currency,email_customer_receive):
+def Commisson_league_6(customer_id,amount_receive,i,email_customer_receive):
     if i == 1:
         percent_receve = 50
     else:
@@ -1135,73 +968,30 @@ def Commisson_league_6(customer_id,amount_receive,currency,i,price_currency,emai
     customers = db.users.find_one({"customer_id" : customer_id })
     if customers is not None:
         
-        commission = float(amount_receive)*float(percent_receve)*float(price_currency)/100
+        commission = float(amount_receive)*float(percent_receve)/100
 
         l_wallet = float(customers['l_wallet'])
-        new_l_wallet = float(l_wallet) + float(commission)
-        new_l_wallet = float(new_l_wallet)
+        new_l_wallet = float(l_wallet) + float(commission)*100000000
+        new_l_wallet = round(float(new_l_wallet),8)
 
         total_earn = float(customers['total_earn'])
-        new_total_earn = float(total_earn) + float(commission)
-        new_total_earn = float(new_total_earn)
+        new_total_earn = float(total_earn) + float(commission)*100000000
+        new_total_earn = round(float(new_total_earn),8)
 
-        if currency == 'BTC': 
-            string_query = 'balance.bitcoin.available'
-            val_balance = customers['balance']['bitcoin']['available']
-        if currency == 'ETH':
-            string_query = 'balance.ethereum.available'
-            val_balance = customers['balance']['ethereum']['available']
-        if currency == 'LTC':
-            string_query = 'balance.litecoin.available'
-            val_balance = customers['balance']['litecoin']['available']
-        if currency == 'XRP':
-            string_query = 'balance.ripple.available'
-            val_balance = customers['balance']['ripple']['available']
-        if currency == 'USDT':
-            string_query = 'balance.tether.available'
-            val_balance = customers['balance']['tether']['available']
-        if currency == 'DASH':
-            string_query = 'balance.dash.available'
-            val_balance = customers['balance']['dash']['available']
-        if currency == 'EOS':
-            string_query = 'balance.eos.available'
-            val_balance = customers['balance']['eos']['available']
-        if currency == 'ASIC':
-            string_query = 'balance.coin.available'
-            val_balance = customers['balance']['coin']['available']
-
-
-        new_balance_wallet = float(val_balance) + (float(amount_receive)*float(percent_receve)*1000000)
+        new_balance_wallet = customers['balance']['coin']['available'] + float(commission)*100000000
         new_balance_wallet = round(float(new_balance_wallet),8)
 
-        db.users.update({ "_id" : ObjectId(customers['_id']) }, { '$set': {string_query : new_balance_wallet,'total_earn': new_total_earn, 'l_wallet' :new_l_wallet } })
+        db.users.update({ "_id" : ObjectId(customers['_id']) }, { '$set': {'balance.coin.available' : new_balance_wallet,'total_earn': new_total_earn, 'l_wallet' :new_l_wallet } })
         
-        detail = 'Receive from ID: '+ str(email_customer_receive) + ' - F'+str(i)
-        SaveHistory(customers['customer_id'],customers['email'],detail, round((float(amount_receive)*float(percent_receve)/100),8), currency, 'Leader commission')
-
+        detail = 'Receive from ID: '+ de_email(str(email_customer_receive)) + ' - F'+str(i)
+        SaveHistory(customers['customer_id'],customers['email'],detail, round(commission,8), 'ASIC', 'Leader commission',str(email_customer_receive))
     return True
 
 def Leadership_commission(customer_id,amount_receive,currency):
     customer_ml = db.users.find_one({"customer_id" : customer_id })
     email_customer_receive = customer_ml['email']
-    ticker = db.tickers.find_one({})
+    
     if customer_ml['p_node'] != '':
-
-        if currency == 'BTC': 
-            price_currency = ticker['btc_usd']
-        if currency == 'ETH':
-            price_currency = ticker['eth_usd']
-        if currency == 'LTC':
-            price_currency = ticker['ltc_usd']
-        if currency == 'XRP':
-            price_currency = ticker['xrp_usd']
-        if currency == 'USDT':
-            price_currency = ticker['usdt_usd']
-        if currency == 'EOS':
-            price_currency = ticker['eos_usd']
-        if currency == 'DASH':
-            price_currency = ticker['dash_usd']
-
         i = 0
         while (True):
             i +=1
@@ -1210,24 +1000,57 @@ def Leadership_commission(customer_id,amount_receive,currency):
                 break
             else:
                 if int(customer_ml_p_node['league']) == 1:
-                    Commisson_league_1(customer_ml_p_node['customer_id'],amount_receive,currency,i,price_currency,email_customer_receive)
+                    Commisson_league_1(customer_ml_p_node['customer_id'],amount_receive,i,email_customer_receive)
 
                 if int(customer_ml_p_node['league']) == 2:
-                    Commisson_league_2(customer_ml_p_node['customer_id'],amount_receive,currency,i,price_currency,email_customer_receive)
+                    Commisson_league_2(customer_ml_p_node['customer_id'],amount_receive,i,email_customer_receive)
 
                 if int(customer_ml_p_node['league']) == 3:
-                    Commisson_league_3(customer_ml_p_node['customer_id'],amount_receive,currency,i,price_currency,email_customer_receive)
+                    Commisson_league_3(customer_ml_p_node['customer_id'],amount_receive,i,email_customer_receive)
 
                 if int(customer_ml_p_node['league']) == 4:
-                    Commisson_league_4(customer_ml_p_node['customer_id'],amount_receive,currency,i,price_currency,email_customer_receive)
+                    Commisson_league_4(customer_ml_p_node['customer_id'],amount_receive,i,email_customer_receive)
 
                 if int(customer_ml_p_node['league']) == 5:
-                    Commisson_league_5(customer_ml_p_node['customer_id'],amount_receive,currency,i,price_currency,email_customer_receive)
+                    Commisson_league_5(customer_ml_p_node['customer_id'],amount_receive,i,email_customer_receive)
 
                 if int(customer_ml_p_node['league']) == 6:
-                    Commisson_league_6(customer_ml_p_node['customer_id'],amount_receive,currency,i,price_currency,email_customer_receive)
+                    Commisson_league_6(customer_ml_p_node['customer_id'],amount_receive,i,email_customer_receive)
                 #print customer_ml_p_node['customer_id'],i
                 
             customer_ml = db.users.find_one({"customer_id" : customer_ml_p_node['customer_id'] })
             if customer_ml is None:
                 break
+
+
+def Share_commission(amount):
+    customers = db.users.find({ 'league': { '$gt': 4 } })
+    count_user = customers.count()
+
+    ticker = db.tickers.find_one({})
+    price_coin = ticker['coin_usd']
+
+    percent = 1
+
+    commission = float(amount)/float(count_user)*float(percent)/100
+
+    coin_received = round(float(commission)/float(price_coin),8)
+
+    print commission,price_coin, coin_received
+    for x in customers:
+        
+        ss_wallet = float(x['ss_wallet'])
+        new_ss_wallet = float(ss_wallet) + float(coin_received)*100000000
+        new_ss_wallet = round(float(new_ss_wallet),8)
+
+        total_earn = float(x['total_earn'])
+        new_total_earn = float(total_earn) + float(coin_received)*100000000
+        new_total_earn = round(float(new_total_earn),8)
+
+        new_balance_wallet = x['balance']['coin']['available'] + float(coin_received)*100000000
+        new_balance_wallet = round(float(new_balance_wallet),8)
+
+        db.users.update({ "_id" : ObjectId(x['_id']) }, { '$set': {'balance.coin.available' : new_balance_wallet,'total_earn': new_total_earn, 'ss_wallet' :new_ss_wallet } })
+        
+        detail = 'Sharing '+str(percent)+'% of total $'+str(commission)
+        SaveHistory(x['customer_id'],x['email'],detail, round(coin_received,8), 'ASIC', 'Share commission',str(x['email']))

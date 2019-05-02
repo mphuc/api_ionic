@@ -15,6 +15,7 @@ class Investment(Document):
         'username' : unicode,
         'amount_usd' : float,
         'package' : float,
+        'package_string' : unicode,
         'status' : int,
         'date_added' : datetime.datetime,
         'amount_frofit' : float,
