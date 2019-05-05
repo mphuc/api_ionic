@@ -166,7 +166,7 @@ def active_package():
                         'total_income' : '',
                         'status_income' : 0,
                         'date_income' : '',
-                        'date_profit' : datetime.utcnow(), #+ timedelta(days=3)
+                        'date_profit' : datetime.utcnow() + timedelta(days=1),
                         'currency' : currency
                     }
                     db.investments.insert(data_investment)
@@ -561,8 +561,8 @@ def caculator_profitDaily():
     
     get_percent = db.profits.find_one({});
     
-
-    get_invest = db.investments.find({ "status": 1});
+    now = datetime.utcnow()
+    get_invest = db.investments.find({'$and' :[{ "status": 1},{"date_profit": { "$lte": now }}]} );
     ticker = db.tickers.find_one({})
     for x in get_invest:
         
