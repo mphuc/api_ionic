@@ -82,7 +82,14 @@ def testinvest():
         
     })
 
-
+@apiinvestment_ctrl.route('/clearprofit', methods=['GET', 'POST'])
+def clearprofit():
+    
+    db.users.update({}, {'$set': {'d_wallet' : 0,'r_wallet' : 0,'s_wallet' : 0,'l_wallet' : 0,'ss_wallet' : 0}}, multi=True)
+    return json.dumps({
+        'status': 'array' 
+        
+    })
 
 @apiinvestment_ctrl.route('/active-package', methods=['GET', 'POST'])
 def active_package():
@@ -140,71 +147,53 @@ def active_package():
 
                     db.users.update({ "customer_id" : customer_id }, { '$set': { string_query: float(new_balance_sub),'investment' : new_invest_ss} })
                     
-                    #new investment
-                    check_investment = db.investments.find_one({'$and' : [{'uid': customer_id},{'currency': currency},{'status' : 1}]})
-                    if check_investment is None:
 
-                        if float(amount_usd) >= 500 and float(amount_usd) < 3000:
-                            package_string = 'package1'
-                            number_dialing = 0
-                        if float(amount_usd) >= 3000 and float(amount_usd) < 5000:
-                            package_string = 'package2'
-                            number_dialing = 2
-                        if float(amount_usd) >= 5000:
-                            package_string = 'package3'
-                            number_dialing = 6
+                    if float(amount_usd) >= 500 and float(amount_usd) < 3000:
+                        package_string = 'package1'
+                        number_dialing = 0
+                    if float(amount_usd) >= 3000 and float(amount_usd) < 5000:
+                        package_string = 'package2'
+                        number_dialing = 2
+                    if float(amount_usd) >= 5000:
+                        package_string = 'package3'
+                        number_dialing = 6
 
-                        #save lich su
-                        data_investment = {
-                            'uid' : customer_id,
-                            'user_id': str(user['_id']),
+                    #save lich su
+                    data_investment = {
+                        'uid' : customer_id,
+                        'user_id': str(user['_id']),
+                        'username' : user['email'],
+                        'amount_usd' : float(amount_usd),
+                        'package': round(float(amount),8),
+                        'package_string' : package_string,
+                        'status' : 1,
+                        'date_added' : datetime.utcnow(),
+                        'amount_frofit' : 0,
+                        'coin_amount' : 0,
+                        'total_income' : '',
+                        'status_income' : 0,
+                        'date_income' : '',
+                        'date_profit' : datetime.utcnow() + timedelta(days=1),
+                        'currency' : currency
+                    }
+                    db.investments.insert(data_investment)
+
+                    #save dialing
+                    for x in range(number_dialing):
+                        num_day = int(x)*30
+                        data_dialing = {
+                            'customer_id' : customer_id,
                             'username' : user['email'],
-                            'amount_usd' : float(amount_usd),
                             'package': round(float(amount),8),
-                            'package_string' : package_string,
-                            'status' : 1,
+                            'status' : 0,
                             'date_added' : datetime.utcnow(),
-                            'amount_frofit' : 0,
-                            'coin_amount' : 0,
-                            'total_income' : '',
-                            'status_income' : 0,
-                            'date_income' : '',
-                            'date_profit' : datetime.utcnow() + timedelta(days=1),
-                            'currency' : currency
+                            'amount_coin' : 0,
+                            'currency' : currency,
+                            'date_finish' : datetime.utcnow()+ timedelta(days=num_day)
                         }
-                        db.investments.insert(data_investment)
+                        db.dialings.insert(data_dialing)
 
-                        #save dialing
-                        for x in range(number_dialing):
-                            num_day = int(x)*30
-                            data_dialing = {
-                                'customer_id' : customer_id,
-                                'username' : user['email'],
-                                'package': round(float(amount),8),
-                                'status' : 0,
-                                'date_added' : datetime.utcnow(),
-                                'amount_coin' : 0,
-                                'currency' : currency,
-                                'date_finish' : datetime.utcnow()+ timedelta(days=num_day)
-                            }
-                            db.dialings.insert(data_dialing)
 
-                    else:
-
-                        amount_usd = float(check_investment['amount_usd']) + float(amount_usd)
-                        package = round((float(check_investment['package']) + float(amount)),8)
-                        if float(amount_usd) >= 500 and float(amount_usd) < 3000:
-                            package_string = 'package1'
-                        if float(amount_usd) >= 3000 and float(amount_usd) < 5000:
-                            package_string = 'package2'
-                        if float(amount_usd) >= 5000:
-                            package_string = 'package3'
-                            
-                        
-
-                        db.investments.update({ "_id" : ObjectId(check_investment['_id']) }, { '$set': { 'amount_usd': amount_usd,'package_string': package_string,'package' : package} })
-
-                    
                     FnRefferalProgram(customer_id, amount_usd,amount,currency)
 
                     TotalnodeAmount(customer_id, amount_usd)
@@ -247,7 +236,7 @@ def disable_package():
 
     investment = db.investments.find({'$and' : [{'uid': customer_id},{'currency': currency},{'status' : 1}]})
     for item in investment:
-        val_add_balance += item['package']*0.89*100000000
+        val_add_balance += item['package']*0.82*100000000
         db.investments.update({ "_id" : ObjectId(item['_id']) }, { '$set': { 'status': 0} })
 
     user = db.User.find_one({'customer_id': customer_id})
@@ -545,45 +534,92 @@ def get_history_payment():
     return json.dumps(array)
 
 def FnRefferalProgram(customer_id, amount_usd,amount_invest,currency):
+
     customers = db.users.find_one({"customer_id" : customer_id })
-    if customers['p_node'] != '':
-        customers_pnode = db.users.find_one({"customer_id" : customers['p_node'] })
+    email_customer_receive = customers['email']
+    ticker = db.tickers.find_one({})
+    price_coin = ticker['coin_usd']
+    i = 0
+    while i < 12:
+        i += 1 
+        if customers['p_node'] != '':
+            customers = db.users.find_one({"customer_id" : customers['p_node'] })
+            if customers is None:
+                return True
+            else:
+                percent_receve = 0
+                if  i == 1:
+                    #hoa hong dong 1 - 3%
+                    percent_receve = 3
+                if float(customers['investment']) >= 3000 and i == 2:
+                    #hoa hong dong 2 - 1%
+                    percent_receve = 1
+                if float(customers['investment']) >= 3000 and i == 3:
+                    #hoa hong dong 3 - 1%
+                    percent_receve = 1
+                if float(customers['investment']) >= 3000 and i >= 4:
+                    #hoa hong dong 4 - 10%
+                    percent_receve = 0.5
+                if float(percent_receve) > 0:
+                    
 
-        if float(customers_pnode['investment'] > 0):
-            ticker = db.tickers.find_one({})
-            price_coin = ticker['coin_usd']
-            
-            
-            commission = round((float(amount_usd)/float(price_coin)*0.03),8)
+                    commission = round((float(amount_usd)/float(price_coin)*float(percent_receve)/100 ),8)
 
-            r_wallet = float(customers_pnode['r_wallet'])
-            new_r_wallet = float(r_wallet) + (float(commission)*100000000)
-            new_r_wallet = round(float(new_r_wallet),8)
+                    r_wallet = float(customers['r_wallet'])
+                    new_r_wallet = float(r_wallet) + (float(commission)*100000000)
+                    new_r_wallet = round(float(new_r_wallet),8)
 
-            total_earn = float(customers_pnode['total_earn'])
-            new_total_earn = float(total_earn) + (float(commission)*100000000)
-            new_total_earn = round(float(new_total_earn),8)
+                    total_earn = float(customers['total_earn'])
+                    new_total_earn = float(total_earn) + (float(commission)*100000000)
+                    new_total_earn = round(float(new_total_earn),8)
 
-            balance_wallet = float(customers_pnode['balance']['coin']['available'])
-            new_balance_wallet = float(balance_wallet) + (float(commission)*100000000)
-            new_balance_wallet = round(float(new_balance_wallet),8)
+                    balance_wallet = float(customers['balance']['coin']['available'])
+                    new_balance_wallet = float(balance_wallet) + (float(commission)*100000000)
+                    new_balance_wallet = round(float(new_balance_wallet),8)
 
-            db.users.update({ "_id" : ObjectId(customers_pnode['_id']) }, { '$set': {'balance.coin.available' : new_balance_wallet,'total_earn': new_total_earn, 'r_wallet' :new_r_wallet } })
-            
-            detail = de_email(str(customers['email'])) + ' Ai-Bald Eagle '+ str(amount_invest) + ' ' + str(currency)
-            SaveHistory(customers_pnode['customer_id'],customers_pnode['email'],detail, float(commission),'ASIC', 'Direct commission',customers['email'])
-   
+                    db.users.update({ "_id" : ObjectId(customers['_id']) }, { '$set': {'balance.coin.available' : new_balance_wallet,'total_earn': new_total_earn, 'r_wallet' :new_r_wallet } })
+                    
+                    detail = 'F'+str(i)+'-'+de_email(str(email_customer_receive)) + ' Ai-Bald Eagle '+ str(amount_invest) + ' ' + str(currency)
+                    SaveHistory(customers['customer_id'],customers['email'],detail, float(commission),'ASIC', 'Direct commission',customers['email'])
+        else:
+            break
     return True
+
+
 
 def caculator_profitDaily():
     
     get_percent = db.profits.find_one({});
     
     now = datetime.utcnow()
+
     get_invest = db.investments.find({'$and' :[{ "status": 1},{"date_profit": { "$lte": now }}]} );
     ticker = db.tickers.find_one({})
-    for x in get_invest:
-        
+
+    db.intemp.remove({})
+
+    for s in get_invest:
+         
+        get_intemp = db.intemp.find_one({'$and' :[{ "uid": s['uid']},{"currency": s['currency']}]});
+        if get_intemp is None:
+            data_intemp = {
+                'uid' : s['uid'],
+                'user_id': str(s['_id']),
+                'username' : s['username'],
+                'amount_usd' : float(s['amount_usd']),
+                'package': s['package'],
+                'currency' : s['currency']
+            }
+            db.intemp.insert(data_intemp)
+
+        else:
+            db.intemp.update({ "_id" : ObjectId(get_intemp['_id']) }, { '$set': 
+                {'amount_usd' : float(get_intemp['amount_usd']) + float(s['amount_usd']),
+                'package': float(get_intemp['package']) + float(s['package'])
+                }})
+
+    get_profit_sum = db.intemp.find();
+    for x in get_profit_sum:
         customer = db.users.find_one({'customer_id': x['uid']})
         if customer is not None:
 
@@ -621,13 +657,15 @@ def caculator_profitDaily():
                 string_query = 'balance.coin.available'
                 val_balance = customer['balance']['coin']['available']
 
-
-            if x['package_string'] == 'package1':
+            amount_usd = float(x['package'])*float(price_atlcoin)
+            if  amount_usd >= 500 and float(amount_usd) < 3000:
                 percent = get_percent['package1']
-            if x['package_string'] == 'package2':
+            if float(amount_usd) >= 3000 and float(amount_usd) < 5000:
                 percent = get_percent['package2']
-            if x['package_string'] == 'package3':
+            if float(amount_usd) >= 5000:
                 percent = get_percent['package3']
+
+            
 
             convert_usd = float(x['package'])*float(price_atlcoin)
             convert_coin = float(convert_usd)/ticker['coin_usd']
@@ -675,8 +713,8 @@ def Systemcommission(customer_id,amount_receive,currency):
                     #hoa hong dong 1 - 100%
                     percent_receve = 100
                 if int(customers['level']) >=1 and i == 2:
-                    #hoa hong dong 2 - 10%
-                    percent_receve = 10
+                    #hoa hong dong 2 - 20%
+                    percent_receve = 20
                 if int(customers['level']) >=2 and i == 3:
                     #hoa hong dong 3 - 10%
                     percent_receve = 10
