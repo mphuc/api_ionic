@@ -141,52 +141,70 @@ def active_package():
                     db.users.update({ "customer_id" : customer_id }, { '$set': { string_query: float(new_balance_sub),'investment' : new_invest_ss} })
                     
 
-                    if float(amount_usd) >= 500 and float(amount_usd) < 3000:
-                        package_string = 'package1'
-                        number_dialing = 0
-                    if float(amount_usd) >= 3000 and float(amount_usd) < 5000:
-                        package_string = 'package2'
-                        number_dialing = 2
-                    if float(amount_usd) >= 5000:
-                        package_string = 'package3'
-                        number_dialing = 6
+                    check_investment = db.investments.find_one({'$and' : [{'uid': customer_id},{'currency': currency},{'status' : 1}]})
+                    if check_investment is None:
 
-                    #save lich su
-                    data_investment = {
-                        'uid' : customer_id,
-                        'user_id': str(user['_id']),
-                        'username' : user['email'],
-                        'amount_usd' : float(amount_usd),
-                        'package': round(float(amount),8),
-                        'package_string' : package_string,
-                        'status' : 1,
-                        'date_added' : datetime.utcnow(),
-                        'amount_frofit' : 0,
-                        'coin_amount' : 0,
-                        'total_income' : '',
-                        'status_income' : 0,
-                        'date_income' : '',
-                        'date_profit' : datetime.utcnow() + timedelta(days=1),
-                        'currency' : currency
-                    }
-                    db.investments.insert(data_investment)
+                        if float(amount_usd) >= 500 and float(amount_usd) < 3000:
+                            package_string = 'package1'
+                            number_dialing = 0
+                        if float(amount_usd) >= 3000 and float(amount_usd) < 5000:
+                            package_string = 'package2'
+                            number_dialing = 2
+                        if float(amount_usd) >= 5000:
+                            package_string = 'package3'
+                            number_dialing = 6
 
-                    #save dialing
-                    for x in range(number_dialing):
-                        num_day = int(x)*30
-                        data_dialing = {
-                            'customer_id' : customer_id,
+                        #save lich su
+                        data_investment = {
+                            'uid' : customer_id,
+                            'user_id': str(user['_id']),
                             'username' : user['email'],
+                            'amount_usd' : float(amount_usd),
                             'package': round(float(amount),8),
-                            'status' : 0,
+                            'package_string' : package_string,
+                            'status' : 1,
                             'date_added' : datetime.utcnow(),
-                            'amount_coin' : 0,
-                            'currency' : currency,
-                            'date_finish' : datetime.utcnow()+ timedelta(days=num_day)
+                            'amount_frofit' : 0,
+                            'coin_amount' : 0,
+                            'total_income' : '',
+                            'status_income' : 0,
+                            'date_income' : '',
+                            'date_profit' : datetime.utcnow() + timedelta(days=1),
+                            'currency' : currency
                         }
-                        db.dialings.insert(data_dialing)
+                        db.investments.insert(data_investment)
 
+                        #save dialing
+                        for x in range(number_dialing):
+                            num_day = int(x)*30
+                            data_dialing = {
+                                'customer_id' : customer_id,
+                                'username' : user['email'],
+                                'package': round(float(amount),8),
+                                'status' : 0,
+                                'date_added' : datetime.utcnow(),
+                                'amount_coin' : 0,
+                                'currency' : currency,
+                                'date_finish' : datetime.utcnow()+ timedelta(days=num_day)
+                            }
+                            db.dialings.insert(data_dialing)
 
+                    else:
+
+                        amount_usd = float(check_investment['amount_usd']) + float(amount_usd)
+                        package = round((float(check_investment['package']) + float(amount)),8)
+                        if float(amount_usd) >= 500 and float(amount_usd) < 3000:
+                            package_string = 'package1'
+                        if float(amount_usd) >= 3000 and float(amount_usd) < 5000:
+                            package_string = 'package2'
+                        if float(amount_usd) >= 5000:
+                            package_string = 'package3'
+                            
+                        
+
+                        db.investments.update({ "_id" : ObjectId(check_investment['_id']) }, { '$set': { 'amount_usd': amount_usd,'package_string': package_string,'package' : package} })
+
+                    
                     FnRefferalProgram(customer_id, amount_usd,amount,currency)
 
                     TotalnodeAmount(customer_id, amount_usd)
