@@ -140,7 +140,7 @@ def active_package():
 
                     db.users.update({ "customer_id" : customer_id }, { '$set': { string_query: float(new_balance_sub),'investment' : new_invest_ss} })
                     
-
+                    #new investment
                     check_investment = db.investments.find_one({'$and' : [{'uid': customer_id},{'currency': currency},{'status' : 1}]})
                     if check_investment is None:
 
