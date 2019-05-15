@@ -369,21 +369,28 @@ def get_infomation_user():
     dataDict = json.loads(request.data)
     customer_id = dataDict['customer_id'].lower()
     
-    user = db.User.find_one({'customer_id': customer_id},{'league' : 1,'ss_wallet' : 1,'total_node' : 1,'security' : 1,'personal_info' : 1,'balance' : 1,'email' : 1,'d_wallet' : 1,'r_wallet' : 1,'s_wallet' : 1,'l_wallet' : 1,'total_earn' : 1})
+    user = db.User.find_one({'customer_id': customer_id})
     
     if user is None:
         return json.dumps({
           'status': 'error'
       })
     else:
-
-        #level = Getlevel(customer_id)
-        # if level == 0:
-        #     level_string = 'Member'
-        # else:
-        #     level_string = 'Level '+str(level)
-
         level_string = 'Member'
+
+        if user['level'] == 1:
+            level_string = 'Level 1'
+        if user['level'] == 2:
+            level_string = 'Level 2'
+        if user['level'] == 3:
+            level_string = 'Level 3'
+        if user['level'] == 4:
+            level_string = 'Level 4'
+        if user['level'] == 5:
+            level_string = 'Level 5'
+        if user['level'] == 5:
+            level_string = 'Level 6'
+
         if user['league'] == 1:
             level_string = 'Gold'
         if user['league'] == 2:
@@ -396,11 +403,43 @@ def get_infomation_user():
             level_string = 'Emerald'
 
         get_percent = db.profits.find_one({});
-    
+        
+
+        now = datetime.utcnow()
+        get_invest = db.investments.find({'$and' :[{'uid': customer_id},{ "status": 1},{"date_profit": { "$lte": now }}]} )
+        package_btc = package_eth = package_ltc = package_xrp = package_dash = package_eos = package_usdt = 0
+        
+        for x in get_invest:
+            
+            if x['currency'] == 'BTC':
+                package_btc = float(package_btc) + x['amount_usd']
+            if x['currency'] == 'ETH':
+                package_eth = float(package_eth) + x['amount_usd']
+            if x['currency'] == 'LTC':
+                package_ltc = float(package_ltc) + x['amount_usd']
+            if x['currency'] == 'XRP':
+                package_xrp = float(package_xrp) + x['amount_usd']
+            if x['currency'] == 'DASH':
+                package_dash = float(package_dash) + x['amount_usd']
+            if x['currency'] == 'EOS':
+                package_eos = float(package_eos) + x['amount_usd']
+            if x['currency'] == 'USDT':
+                package_usdt = float(package_usdt) + x['amount_usd']
+
+        max_package =  max(package_btc , package_eth , package_ltc , package_xrp , package_dash , package_eos , package_usdt)
+        
+        percent = 0
+        if  float(max_package) >= 500 and float(max_package) < 3000:
+            percent = get_percent['package1']
+        if float(max_package) >= 3000 and float(max_package) < 5000:
+            percent = get_percent['package2']
+        if float(max_package) >= 5000:
+            percent = get_percent['package3']
+
         return json.dumps({
           'security' : user['security'],
           'img_profile' : user['personal_info']['img_profile'],
-          'percent_daily' : get_percent['package1'],
+          'percent_daily' : percent,
           'd_wallet' : user['d_wallet'],
           'r_wallet' : user['r_wallet'],
           's_wallet' : user['s_wallet'],
@@ -550,7 +589,7 @@ def send_mail_verify():
         })
     else:
         password = id_generator(6)
-        print password
+        
         count_send_mail = int(user['security']['count_send_mail']) + 1
         if count_send_mail < 5 and int(user['security']['email']['status']) == 0:
             db.users.update({ "_id" : ObjectId(user['_id']) }, { '$set': {'security.email.code': password,'security.count_send_mail' : count_send_mail  } })

@@ -657,8 +657,8 @@ def caculator_profitDaily():
                 string_query = 'balance.coin.available'
                 val_balance = customer['balance']['coin']['available']
 
-            amount_usd = float(x['package'])*float(price_atlcoin)
-            if  amount_usd >= 500 and float(amount_usd) < 3000:
+            amount_usd = float(x['amount_usd'])
+            if  float(amount_usd) >= 500 and float(amount_usd) < 3000:
                 percent = get_percent['package1']
             if float(amount_usd) >= 3000 and float(amount_usd) < 5000:
                 percent = get_percent['package2']
@@ -871,6 +871,8 @@ def SaveHistory(uid, username,detail, amount, currency,types,email_link):
 def TotalnodeAmount(user_id, amount_invest_usd):
     
     customer_ml = db.users.find_one({"customer_id" : user_id })
+
+    print customer_ml
 
     if customer_ml['p_node'] != '':
         while (True):
